@@ -1,3 +1,21 @@
+## [v0.4.5](https://github.com/teamssix/cf/releases/tag/v0.4.5) 2023.4.29
+
+### 新增功能
+
+* [#221](https://github.com/teamssix/cf/pull/221) 增加华为云控制台接管和权限枚举功能
+
+### 功能优化
+
+* [#220](https://github.com/teamssix/cf/pull/220) 优化错误信息输出
+* [#225](https://github.com/teamssix/cf/pull/225) 优化更新功能
+
+### Bug 修复
+
+* [#201](https://github.com/teamssix/cf/pull/201) 修复配置令牌功能的 Bug
+* [#203](https://github.com/teamssix/cf/pull/203) [#204](https://github.com/teamssix/cf/pull/204) 修复两处缓存功能的 Bug
+* [#208](https://github.com/teamssix/cf/pull/208) 修复更新功能 Bug
+* [#224](https://github.com/teamssix/cf/pull/224) 修复腾讯云 cvm 和 lh 无法列全的 Bug
+
 ## [v0.4.4](https://github.com/teamssix/cf/releases/tag/v0.4.4) 2022.12.13
 
 ### 新增功能

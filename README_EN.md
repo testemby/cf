@@ -12,15 +12,13 @@
 </p>
 
 
-
-
 ---
 
 CF is a cloud exploitation framework, It can facilitate the work of the red team after obtaining access key.
 
 CF releases: [github.com/teamssix/cf/releases](https://github.com/teamssix/cf/releases)
 
-![](https://cdn.jsdelivr.net/gh/teamssix/BlogImages/imgs/202212132148640.png)
+![](https://cdn.jsdelivr.net/gh/teamssix/BlogImages/imgs/202304291924886.png)
 
 Current Supported Clouds:
 
@@ -39,7 +37,7 @@ For detailed manuals, please visit: [wiki.teamssix.com/cf](https://wiki.teamssix
 
 ## Install
 
-Download the compressed files corresponding to the system in the CF download url: [github.com/teamssix/cf/releases](https://github.com/teamssix/cf/releases), decompressing it and run it in the command line. 
+Download the compressed files corresponding to the system in the CF download url: [github.com/teamssix/cf/releases](https://github.com/teamssix/cf/releases), decompressing it and run it in the command line.
 
 <details> <summary>The following systems are currently supported</summary><br>
 
@@ -55,7 +53,7 @@ Download the compressed files corresponding to the system in the CF download url
 |  cf_x.x.x_windows_arm64.zip  | Windows |                ARM                 |  64  |
 
 </details>
-    
+
 ## Cases
 
 |               Title                | Version |                         Article URL                          |  Author  | Release Time |
