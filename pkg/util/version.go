@@ -7,6 +7,7 @@ import (
 	"github.com/teamssix/cf/pkg/util/global"
 	"io/ioutil"
 	"net/http"
+	"os"
 	"strconv"
 	"strings"
 )
@@ -61,6 +62,10 @@ func CheckVersion(version string) (bool, string, error) {
 					return reqErr(err)
 				} else {
 					newVersion := latestReleases.NewVersion
+					if newVersion == "" {
+						log.Errorln("最新版本获取失败，请检查网络情况 (Failed to get the latest version, Please check the network connection.)")
+						os.Exit(0)
+					}
 					versionNumber := caclVersionNumber(version)
 					newVersionNumber := caclVersionNumber(newVersion)
 					if versionNumber >= newVersionNumber {
@@ -70,7 +75,6 @@ func CheckVersion(version string) (bool, string, error) {
 					}
 				}
 			}
-
 		}
 	}
 }

@@ -2,6 +2,6 @@ package global
 
 const (
 	AppDirName = ".config/cf"
-	Version    = "v0.4.4"
-	UpdateTime = "2022.12.13"
+	Version    = "v0.4.5"
+	UpdateTime = "2023.4.29"
 )
