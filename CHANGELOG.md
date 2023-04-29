@@ -7,6 +7,7 @@
 ### 功能优化
 
 * [#220](https://github.com/teamssix/cf/pull/220) 优化错误信息输出
+* [#225](https://github.com/teamssix/cf/pull/225) 优化更新功能
 
 ### Bug 修复
 
