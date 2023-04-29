@@ -12,15 +12,13 @@
 </p>
 
 
-
-
 ---
 
 CF is a cloud exploitation framework, It can facilitate the work of the red team after obtaining access key.
 
 CF releases: [github.com/teamssix/cf/releases](https://github.com/teamssix/cf/releases)
 
-![](https://cdn.jsdelivr.net/gh/teamssix/BlogImages/imgs/202212132148640.png)
+![](https://cdn.jsdelivr.net/gh/teamssix/BlogImages/imgs/202304291914961.png)
 
 Current Supported Clouds:
 
