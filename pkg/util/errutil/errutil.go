@@ -58,6 +58,7 @@ var errorMessagesExit = map[string]string{
 	"Code=AuthFailure.SignatureFailure": "请求签名验证失败，请检查您的访问密钥是否正确 (Request signature verification failed, please check if your access key is correct.)",
 	"read: connection reset by peer":    "网络连接出现错误，请检查您的网络环境是否正常 (There is an error in your network connection, please check if your network environment is normal.)",
 	"InvalidAccessKeyId.NotFound":       "当前访问密钥无效 (Current access key are invalid)",
+	"InvalidAccessKeySecret":            "无效的 AccessKey (Invalid AccessKey)",
 }
 
 func HandleErr(e error) {
