@@ -18,7 +18,6 @@ import (
 	log "github.com/sirupsen/logrus"
 
 	"github.com/teamssix/cf/pkg/cloud"
-	"github.com/AlecAivazis/survey/v2"
 )
 
 var header = []string{"序号 (SN)", "策略名称 (PolicyName)", "描述 (Description)"}
@@ -100,34 +99,7 @@ func ListPermissions() {
 					case strings.Contains(o[1], "AliyunRDSReadOnlyAccess"):
 						data2 = appendData(rdslsAction, rdslsDescription)
 					case strings.Contains(o[1], "AliyunRAMFullAccess"):
-						var EvenPrivilege bool = false //判断是否已经提权过
-						for _, e := range data2 {
-							if e[1] == consoleAction {
-								EvenPrivilege = true
-							}	
-						}
-						if EvenPrivilege == false {
-							choose := []string{"Yes", "No"}
-							var choosePrivilege string
-							var result bool = false
-						    prompt := &survey.Select{
-						        Message: "检测到权限可提升，是否自动提权？ (Is the permission raised automatically?)",
-						        Options: choose,
-						    }
-						    survey.AskOne(prompt, &choosePrivilege)
-						    if choosePrivilege == "Yes" {
-						    	result = privilegePromotion()
-						    }
-						    if result == false || choosePrivilege == "No" {
-						    	data2 = appendData(consoleAction, consoleDescription)
-						    } else {
-						    	data2 = appendData(osslsAction, osslsDescription)
-								data2 = appendData(ecslsAction, ecslsDescription)
-								data2 = appendData(ecsexecAction, ecsexecDescription)
-								data2 = appendData(rdslsAction, rdslsDescription)
-								data2 = appendData(consoleAction, consoleDescription)
-						    }
-						}
+						data2 = appendData(consoleAction, consoleDescription)
 					}
 				}
 				if len(data2) == 0 {
@@ -245,19 +217,6 @@ func listGroupsForUser(userName string) []string {
 		groups = append(groups, g.GroupName)
 	}
 	return groups
-}
-
-func privilegePromotion() bool {
-	request := ram.CreateAttachPolicyToUserRequest()
-	request.Scheme = "https"
-	request.PolicyType = "System"
-	request.PolicyName = "AdministratorAccess"
-	request.UserName = getCallerIdentity()
-	_, err := RAMClient().AttachPolicyToUser(request)
-	if err != nil {
-		return false
-	}
-	return true
 }
 
 func traversalPermissions() ([][]string, [][]string) {
