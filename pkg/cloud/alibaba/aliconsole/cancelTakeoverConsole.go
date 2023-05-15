@@ -33,6 +33,27 @@ func DeleteUser(userName string) {
 	}
 }
 
+func DeleteAK(userName string) {
+	request := ram.CreateListAccessKeysRequest()
+	request.Scheme = "https"
+	request.UserName = userName
+	response, err := aliram.RAMClient().ListAccessKeys(request)
+	errutil.HandleErrNoExit(err)
+	for _, accessKey := range response.AccessKeys.AccessKey {
+		deleteRequest := ram.CreateDeleteAccessKeyRequest()
+		deleteRequest.Scheme = "https"
+		deleteRequest.UserName = userName
+		deleteRequest.UserAccessKeyId = accessKey.AccessKeyId
+
+		_, err := aliram.RAMClient().DeleteAccessKey(deleteRequest)
+		errutil.HandleErrNoExit(err)
+	}
+	if err == nil {
+		log.Debugf("成功移除 %s 用户AccessKey (Delete %s user successfully)", userName, userName)
+	}
+	
+}
+
 func CancelTakeoverConsole() {
 	TakeoverConsoleCache := database.SelectTakeoverConsoleCache("alibaba")
 	if len(TakeoverConsoleCache) == 0 {
@@ -40,6 +61,7 @@ func CancelTakeoverConsole() {
 	} else {
 		userName := strings.Split(TakeoverConsoleCache[0].UserName, "@")[0]
 		DetachPolicyFromUser(userName)
+		DeleteAK(userName)
 		DeleteUser(userName)
 		database.DeleteTakeoverConsoleCache("alibaba")
 		log.Infof("成功删除 %s 用户，已取消控制台接管 (Successful deletion of %s user, console takeover cancelled)", userName, userName)
