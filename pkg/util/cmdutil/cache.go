@@ -101,6 +101,11 @@ func ReadECSCache(provider string) []pubutil.ECSCache {
 	return database.SelectECSCache(provider)
 }
 
+func ReadRDSCache(provider string) []pubutil.RDSCache {
+	log.Debugf("正在读取 %s 的云数据库实例缓存数据 (Reading %s rds instances cache data)", provider, provider)
+	return database.SelectRDSCache(provider)
+}
+
 func PrintOSSCacheFile(header []string, region string, provider string, resourceType string, ossLsBucket string) {
 	var data [][]string
 	OSSCache := database.SelectOSSCacheFilter(provider, region)
