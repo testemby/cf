@@ -15,6 +15,7 @@ var (
 func init() {
 	alibabaCmd.AddCommand(rdsCmd)
 	rdsCmd.AddCommand(rdslsCmd)
+	rdsCmd.AddCommand(rdsInfoCmd)
 	rdsCmd.PersistentFlags().BoolVar(&rdslsFlushCache, "flushCache", false, "刷新缓存，不使用缓存数据 (Refresh the cache without using cached data)")
 	rdslsCmd.Flags().StringVarP(&rdslsRegion, "region", "r", "all", "指定区域 ID (Specify Region ID)")
 	rdslsCmd.Flags().StringVarP(&rdslsSpecifiedDBInstanceID, "DBInstanceID", "i", "all", "指定数据库实例 ID (Specify DBInstance ID)")
@@ -33,5 +34,14 @@ var rdslsCmd = &cobra.Command{
 	Long:  "列出所有的云数据库 (List all DBInstances)",
 	Run: func(cmd *cobra.Command, args []string) {
 		alirds.PrintDBInstancesList(rdslsRegion, running, rdslsSpecifiedDBInstanceID, rdslsType, rdslsFlushCache)
+	},
+}
+
+var rdsInfoCmd = &cobra.Command{
+	Use:	"info",
+	Short:  "列出数据库实例信息 (Lists database instance information)",
+	Long:	"列出数据库实例信息 (Lists database instance information)",
+	Run:	func(cmd *cobra.Command, args []string) {
+		alirds.PrintDBInstancesInfo(rdslsRegion, running, rdslsSpecifiedDBInstanceID, rdslsType, rdslsFlushCache)
 	},
 }
