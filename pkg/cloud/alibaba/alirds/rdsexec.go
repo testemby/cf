@@ -5,12 +5,117 @@ import (
 	"github.com/aliyun/alibaba-cloud-sdk-go/services/rds"
 	log "github.com/sirupsen/logrus"
 	"github.com/teamssix/cf/pkg/cloud"
+	// "github.com/teamssix/cf/pkg/util"
 	"github.com/teamssix/cf/pkg/util/cmdutil"
 	"github.com/AlecAivazis/survey/v2"
 	"fmt"
 	"sort"
 	"strings"
 )
+
+// func AddAccount(region string, specifiedDBInstanceID string, rdsAccount string) {
+// 	password := util.GenerateRandomPasswords()
+// 	request := rds.CreateCreateAccountRequest()
+// 	request.DBInstanceId = specifiedDBInstanceID
+// 	request.AccountName = rdsAccount
+// 	request.password = AccountPassword
+// 	request.AccountType = "Super"
+// 	request.Scheme = "https"
+
+// 	_, err := RDSClient(region).CreateAccount(request)
+// 	if err != nil {
+// 		fmt.Println("创建失败，请检查是否具备 CreateAccount  权限或已存在同名用户 (Create failed, please check whether have AllocateInstancePublicConnection permissions or existing communications address)")
+// 		return
+// 	} else {
+// 		fmt.Println("创建成功，当前用户信息： (Creating an external address succeeded. Querying the current connection address)")
+// 		data := [][]string{
+// 			{rdsAccount, password},
+// 		}
+// 		var header = []string{"用户名 (User Name)", "密码 (Password)"}
+// 		var td = cloud.TableData{Header: header, Body: data}
+// 		cloud.PrintTable(td, "")
+// 	}
+// }
+
+
+func AddWhiteList(region string, specifiedDBInstanceID string, rdsWhiteList string) {
+	request := rds.CreateModifySecurityIpsRequest()
+	request.Scheme = "https"
+	request.ModifyMode = "Append"
+	request.DBInstanceId = specifiedDBInstanceID
+	request.SecurityIps = rdsWhiteList
+
+	if strings.Contains(rdsWhiteList, "0.0.0.0") {
+		fmt.Println("由于该地址会触发安全告警，禁止使用！")
+		return
+	} else {
+		_, err := RDSClient(region).ModifySecurityIps(request)
+		if err != nil {
+		fmt.Println("追加失败，请检查是否具备 ModifySecurityIps 权限和参数是否符合ip地址格式 (Failed to add the ip address. Check whether you have the ModifySecurityIps permission or whether the parameter matches the IP address format)")
+			return
+		} else {
+			fmt.Println("追加成功，正在查询当前白名单 (Appended successfully and the current whitelist is being queried)")
+			PrintWhiteListInfo(region, specifiedDBInstanceID)
+
+			cleanWhiteList := []string{"Yes"}
+			var cleanWhiteListChoose string
+		    prompt := &survey.Select{
+		        Message: "删除添加的白名单地址？按下回车后，将会删除刚才已添加的白名单地址，请确保攻击已结束 (Delete the added whitelist address? Press Enter to delete the whitelist address you just added. Please ensure that the attack is over)",
+		        Options: cleanWhiteList,
+		    }
+		    survey.AskOne(prompt, &cleanWhiteListChoose)
+		    if cleanWhiteListChoose == "Yes" {
+		    	request.ModifyMode = "Delete"
+		    	_, err = RDSClient(region).ModifySecurityIps(request)
+		    	errutil.HandleErr(err)
+		    	fmt.Println("清理完成 (Clean up completed)")
+		    }
+		}
+	}
+}
+
+func CancelConnection(region string, specifiedDBInstanceID string, rdsConnectCancel string) {
+	request := rds.CreateReleaseInstancePublicConnectionRequest()
+	request.Scheme = "https"
+	request.DBInstanceId = specifiedDBInstanceID
+	request.CurrentConnectionString = rdsConnectCancel
+	_, err := RDSClient(region).ReleaseInstancePublicConnection(request)
+	if err != nil {
+		fmt.Println("关闭失败，请确认是否具备 ReleaseInstancePublicConnection 权限和地址是否正确 (Failed to shut down, please confirm whether have ReleaseInstancePublicConnection permissions and address is correct)")
+		return
+	} else {
+		fmt.Println("清理完成 (Clean up completed)")
+		PrintNetInfo(region, specifiedDBInstanceID)
+	}
+}
+
+func CreateConnection(region string, specifiedDBInstanceID string, rdsConnect string, Engine string) {
+	request := rds.CreateAllocateInstancePublicConnectionRequest()
+	request.Scheme = "https"
+	request.DBInstanceId = specifiedDBInstanceID
+	request.ConnectionStringPrefix = rdsConnect
+	switch Engine {
+		case "MySQL":
+			request.Port = "3306"
+		case "SQLServer":
+			request.Port = "1433"
+		case "PostgreSQL":
+			request.Port = "5432"
+		case "MariaDB":
+			request.Port = "3306"
+		default:
+			request.Port = "3306"
+	}
+
+	_, err := RDSClient(region).AllocateInstancePublicConnection(request)
+	if err != nil {
+		fmt.Println("创建失败，请检查是否具备 AllocateInstancePublicConnection 权限或已存在外联地址 (Create failed, please check whether have AllocateInstancePublicConnection permissions or existing communications address)")
+		return
+	} else {
+		fmt.Println("创建外联地址成功，正在查询当前连接地址 (Creating an external address succeeded. Querying the current connection address)")
+		PrintNetInfo(region, specifiedDBInstanceID)
+	}
+}
 
 func PrintNetInfo(region string, specifiedDBInstanceID string) {
 	request := rds.CreateDescribeDBInstanceNetInfoRequest()
@@ -72,7 +177,7 @@ func PrintAccountInfo(region string, specifiedDBInstanceID string) {
 }
 
 
-func PrintDBInstancesInfo(region string, running bool, specifiedDBInstanceID string, engine string, lsFlushCache bool) {
+func DBInstancesExec(region string, running bool, specifiedDBInstanceID string, engine string, lsFlushCache bool, rdsInfo bool, rdsConnect string, rdsConnectCancel string, rdsWhiteList string , rdsAccount string) {
 	var InstancesList []DBInstances
 	if lsFlushCache == false {
 		data := cmdutil.ReadRDSCache("alibaba")
@@ -158,12 +263,36 @@ func PrintDBInstancesInfo(region string, running bool, specifiedDBInstanceID str
 			}
 		}
 
+		var num = 0
 		for _, i := range InstancesList {
 			specifiedDBInstanceID := i.DBInstanceId
 			region := i.RegionId
-			PrintNetInfo(region, specifiedDBInstanceID)
-			PrintWhiteListInfo(region, specifiedDBInstanceID)
-			PrintAccountInfo(region, specifiedDBInstanceID)
+
+			if rdsInfo {
+				PrintNetInfo(region, specifiedDBInstanceID)
+				PrintWhiteListInfo(region, specifiedDBInstanceID)
+				PrintAccountInfo(region, specifiedDBInstanceID)			
+			}
+
+			if i.DBInstanceStatus == "Running"{
+				num += 1
+				if rdsConnect != "" {
+					CreateConnection(region, specifiedDBInstanceID, rdsConnect, i.Engine)
+				} else if rdsConnectCancel != "" {
+					var isSure string
+					prompt := &survey.Input{
+				        Message: "警告：该方法应当用于取消攻击者创建的实例外联地址，请勿用于删除原有的实例外联地址，否则将造成不可逆的后果。如果已明确并确认要使用此方法，请键入Yes (Warning: This method should be used to cancel the external address of the instance created by the attacker. Do not delete the original external address of the instance. Otherwise, irreversible consequences will be caused. If you are explicit and sure to use this method, type Yes)",
+				    }
+				    survey.AskOne(prompt, &isSure)
+				    if isSure == "Yes" {
+				    	CancelConnection(region, specifiedDBInstanceID, rdsConnectCancel)
+				    }
+				} else if rdsWhiteList != "" {
+					AddWhiteList(region, specifiedDBInstanceID, rdsWhiteList)
+				} else if rdsAccount != "" {
+					fmt.Println("功能暂不可用")
+				}
+			}
 		}
 	}
 }
