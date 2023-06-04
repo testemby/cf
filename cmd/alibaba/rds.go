@@ -3,17 +3,20 @@ package alibaba
 import (
 	"github.com/spf13/cobra"
 	"github.com/teamssix/cf/pkg/cloud/alibaba/alirds"
+	log "github.com/sirupsen/logrus"
 )
 
 var (
 	rdslsFlushCache            bool
 	rdsInfo					   bool
+	rdsAccountCancel           bool
 	rdslsRegion                string
 	rdslsType                  string
 	rdslsSpecifiedDBInstanceID string
 	rdsConnect				   string
 	rdsConnectCancel		   string
 	rdsWhiteList               string
+	rdsWhiteListCancel		   string
 	rdsAccount				   string
 )
 
@@ -30,7 +33,9 @@ func init() {
 	rdsExecCmd.Flags().StringVarP(&rdsConnect, "conn", "c", "", "创建公网连接地址，参数中输入地址前缀，例如crossfire (Create a public network connection address and enter an address prefix in the parameter, such as crossfire)")
 	rdsExecCmd.Flags().StringVarP(&rdsConnectCancel, "connCancel", "","", "关闭公网连接地址, 参数中输入地址前缀，例如crossfire (Disable the public IP address and  enter an address prefix in the parameter, such as crossfire)")
 	rdsExecCmd.Flags().StringVarP(&rdsWhiteList, "white", "w", "", "追加数据库白名单地址，参数中输入白名单地址，例如127.0.0.1 (Append the whitelist address of the database such as 127.0.0.1")
-	rdsExecCmd.Flags().StringVarP(&rdsAccount, "account", "a", "", "为实例添加帐号，参数中输入帐号名称，例如crossfire (To add an account for the instance, enter an account name in the parameter, such as crossfire)")
+	rdsExecCmd.Flags().StringVarP(&rdsWhiteListCancel, "whiteCancel", "", "", "删除数据库白名单地址，参数中输入白名单地址，例如127.0.0.1 (Delete the whitelist address of the database such as 127.0.0.1")
+	rdsExecCmd.Flags().StringVarP(&rdsAccount, "account", "a", "", "为实例添加超管帐号，参数中输入帐号名称，例如crossfire (To add an administrator account for the instance, enter an account name in the parameter, such as crossfire)")
+	rdsExecCmd.Flags().BoolVar(&rdsAccountCancel, "accountCancel", false, "删除通过cf添加的帐号 (Example Delete an account that is added through cf)")
 }
 
 var rdsCmd = &cobra.Command{
@@ -53,6 +58,11 @@ var rdsExecCmd = &cobra.Command{
 	Short:  "执行与rds相关的操作 (Perform rds-related operations)",
 	Long:	"执行与rds相关的操作 (Perform rds-related operations)",
 	Run:	func(cmd *cobra.Command, args []string) {
-		alirds.DBInstancesExec(rdslsRegion, running, rdslsSpecifiedDBInstanceID, rdslsType, rdslsFlushCache, rdsInfo, rdsConnect, rdsConnectCancel, rdsWhiteList, rdsAccount)
+		if rdsInfo == false && rdsConnect == "" && rdsConnectCancel == "" && rdsWhiteList == "" && rdsWhiteListCancel == "" && rdsAccount == "" && rdsAccountCancel == false {
+			log.Warnf("还未指定要执行的命令 (The command to be executed has not been specified yet)\n")
+			cmd.Help()
+		} else {
+			alirds.DBInstancesExec(rdslsRegion, running, rdslsSpecifiedDBInstanceID, rdslsType, rdslsFlushCache, rdsInfo, rdsConnect, rdsConnectCancel, rdsWhiteList, rdsWhiteListCancel, rdsAccount, rdsAccountCancel)
+		}
 	},
 }
