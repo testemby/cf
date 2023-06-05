@@ -12,6 +12,7 @@ import (
 	"fmt"
 	"sort"
 	"strings"
+	"time"
 )
 
 func AddAccount(region string, specifiedDBInstanceID string, rdsAccount string, Engine string) {
@@ -74,7 +75,7 @@ func AddAccount(region string, specifiedDBInstanceID string, rdsAccount string, 
 				request.DBName = v
 				RDSClient(region).GrantAccountPrivilege(request)
 			}
-
+			time.Sleep(100 * time.Millisecond)
 			PrintDataBases(region, specifiedDBInstanceID)
 		}
 	}
@@ -85,12 +86,9 @@ func DeleteAccount(region string) {
 	if len(TakeoverConsoleCache) == 0 {
 		log.Infoln("未创建过帐号，无需取消 (No create of the account, no need to cancel)")
 	} else {
-		specifiedDBInstanceID := TakeoverConsoleCache[0].PrimaryAccountID
-		userName := TakeoverConsoleCache[0].UserName
-
 		request := rds.CreateDeleteAccountRequest()
-		request.DBInstanceId = specifiedDBInstanceID
-		request.AccountName = userName
+		request.DBInstanceId = TakeoverConsoleCache[0].PrimaryAccountID
+		request.AccountName = TakeoverConsoleCache[0].UserName
 		request.Scheme = "https"
 		_, err := RDSClient(region).DeleteAccount(request)
 		if err != nil {
@@ -120,22 +118,29 @@ func AddWhiteList(region string, specifiedDBInstanceID string, rdsWhiteList stri
 		fmt.Println("追加失败，请检查是否具备 ModifySecurityIps 权限和参数是否符合ip地址格式 (Failed to add the ip address. Check whether you have the ModifySecurityIps permission or whether the parameter matches the IP address format)")
 			return
 		} else {
+			database.InsertTakeoverConsoleCache("alibabaRdsWhiteList", specifiedDBInstanceID, "", "", rdsWhiteList)
 			fmt.Println("追加成功，正在查询当前白名单 (Appended successfully and the current whitelist is being queried)")
+			time.Sleep(100 * time.Millisecond)
 			PrintWhiteListInfo(region, specifiedDBInstanceID)
 		}
 	}
 }
 
-func DeleteWhiteList(region string, specifiedDBInstanceID string, rdsWhiteListCancel string) {
-	request := rds.CreateModifySecurityIpsRequest()
-	request.Scheme = "https"
-	request.ModifyMode = "Delete"
-	request.DBInstanceId = specifiedDBInstanceID
-	request.SecurityIps = rdsWhiteListCancel
+func DeleteWhiteList(region string) {
+	TakeoverConsoleCache := database.SelectTakeoverConsoleCache("alibabaRdsWhiteList")
+	if len(TakeoverConsoleCache) == 0 {
+		log.Infoln("未追加过白名单，无需取消 (No append of the whitelist, no need to cancel)")
+	} else {
+		request := rds.CreateModifySecurityIpsRequest()
+		request.Scheme = "https"
+		request.ModifyMode = "Delete"
+		request.DBInstanceId = TakeoverConsoleCache[0].PrimaryAccountID
+		request.SecurityIps = TakeoverConsoleCache[0].LoginUrl
 
-	_, err := RDSClient(region).ModifySecurityIps(request)
-	errutil.HandleErrNoExit(err)
-	fmt.Println("清理完成 (Clean up completed)")
+		_, err := RDSClient(region).ModifySecurityIps(request)
+		errutil.HandleErrNoExit(err)
+		fmt.Println("清理完成 (Clean up completed)")
+	}
 }
 
 
@@ -162,22 +167,29 @@ func CreateConnection(region string, specifiedDBInstanceID string, rdsConnect st
 		fmt.Println("创建失败，请检查是否具备 AllocateInstancePublicConnection 权限或已存在外联地址 (Create failed, please check whether have AllocateInstancePublicConnection permissions or existing communications address)")
 		return
 	} else {
+		database.InsertTakeoverConsoleCache("alibabaRdsConnect", specifiedDBInstanceID, "", "", rdsConnect)
 		fmt.Println("创建外联地址成功，正在查询当前连接地址 (Creating an external address succeeded. Querying the current connection address)")
+		time.Sleep(100 * time.Millisecond)
 		PrintNetInfo(region, specifiedDBInstanceID)
 	}
 }
 
-func CancelConnection(region string, specifiedDBInstanceID string, rdsConnectCancel string) {
-	request := rds.CreateReleaseInstancePublicConnectionRequest()
-	request.Scheme = "https"
-	request.DBInstanceId = specifiedDBInstanceID
-	request.CurrentConnectionString = rdsConnectCancel
-	_, err := RDSClient(region).ReleaseInstancePublicConnection(request)
-	if err != nil {
-		fmt.Println("关闭失败，请确认是否具备 ReleaseInstancePublicConnection 权限和地址是否正确 (Failed to shut down, please confirm whether have ReleaseInstancePublicConnection permissions and address is correct)")
-		return
+func CancelConnection(region string) {
+	TakeoverConsoleCache := database.SelectTakeoverConsoleCache("alibabaRdsConnect")
+	if len(TakeoverConsoleCache) == 0 {
+		log.Infoln("未创建过外联地址，无需取消 (No create of the connection, no need to cancel)")
 	} else {
-		fmt.Println("清理完成 (Clean up completed)")
+		request := rds.CreateReleaseInstancePublicConnectionRequest()
+		request.Scheme = "https"
+		request.DBInstanceId = TakeoverConsoleCache[0].PrimaryAccountID
+		request.CurrentConnectionString = TakeoverConsoleCache[0].LoginUrl
+		_, err := RDSClient(region).ReleaseInstancePublicConnection(request)
+		if err != nil {
+			fmt.Println("关闭失败，请确认是否具备 ReleaseInstancePublicConnection 权限和地址是否正确 (Failed to shut down, please confirm whether have ReleaseInstancePublicConnection permissions and address is correct)")
+			return
+		} else {
+			fmt.Println("清理完成 (Clean up completed)")
+		}
 	}
 }
 
@@ -265,7 +277,7 @@ func PrintAccountInfo(region string, specifiedDBInstanceID string) {
 }
 
 
-func DBInstancesExec(region string, running bool, specifiedDBInstanceID string, engine string, lsFlushCache bool, rdsInfo bool, rdsConnect string, rdsConnectCancel string, rdsWhiteList string , rdsWhiteListCancel, rdsAccount string ,rdsAccountCancel bool) {
+func DBInstancesExec(region string, running bool, specifiedDBInstanceID string, engine string, lsFlushCache bool, rdsInfo bool, rdsConnect string, rdsConnectCancel bool, rdsWhiteList string , rdsWhiteListCancel bool, rdsAccount string ,rdsAccountCancel bool) {
 	var InstancesList []DBInstances
 	if lsFlushCache == false {
 		data := cmdutil.ReadRDSCache("alibaba")
@@ -367,26 +379,12 @@ func DBInstancesExec(region string, running bool, specifiedDBInstanceID string, 
 				num += 1
 				if rdsConnect != "" {
 					CreateConnection(region, specifiedDBInstanceID, rdsConnect, i.Engine)
-				} else if rdsConnectCancel != "" {
-					var isSure string
-					prompt := &survey.Input{
-				        Message: "警告：该方法应当用于取消攻击者创建的实例外联地址，请勿用于删除原有的实例外联地址，否则将造成不可逆的后果。如果已明确并确认要使用此方法，请键入Yes (Warning: This method should be used to cancel the external address of the instance created by the attacker. Do not delete the original external address of the instance. Otherwise, irreversible consequences will be caused. If you are explicit and sure to use this method, type Yes)",
-				    }
-				    survey.AskOne(prompt, &isSure)
-				    if isSure == "Yes" {
-				    	CancelConnection(region, specifiedDBInstanceID, rdsConnectCancel)
-				    }
+				} else if rdsConnectCancel {
+					CancelConnection(region)
 				} else if rdsWhiteList != "" {
 					AddWhiteList(region, specifiedDBInstanceID, rdsWhiteList)
-				} else if rdsWhiteListCancel != ""{
-					var isSure string
-					prompt := &survey.Input{
-				        Message: "警告：该方法应当用于删除攻击者创建的白名单地址，请勿用于删除原有的白名单地址，否则将造成不可逆的后果。如果已明确并确认要使用此方法，请键入Yes (Warning: This method should be used to delete the whitelisted address created by the attacker. Do not delete the original whitelisted address. Otherwise, irreversible consequences will be caused. If you are explicit and sure to use this method, type Yes)",
-				    }
-				    survey.AskOne(prompt, &isSure)
-				    if isSure == "Yes" {
-				    	DeleteWhiteList(region, specifiedDBInstanceID, rdsWhiteListCancel)
-				    }
+				} else if rdsWhiteListCancel{
+				    DeleteWhiteList(region)
 				} else if rdsAccount != "" {
 					AddAccount(region , specifiedDBInstanceID , rdsAccount, i.Engine)
 				} else if rdsAccountCancel {
