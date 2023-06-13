@@ -51,14 +51,16 @@ type RDSCache struct {
 }
 
 type TakeoverConsoleCache struct {
-	Provider         string
-	AccessKeyId      string
-	PrimaryAccountID string
-	UserId           string
-	UserName         string
-	Password         string
-	LoginUrl         string
-	CreateTime       string
+	Provider               string
+	AccessKeyId            string
+	PrimaryAccountID       string
+	UserId                 string
+	UserName               string
+	Password               string
+	LoginUrl               string
+	ConsoleAccessKeyId     string
+	ConsoleAccessKeySecret string
+	CreateTime             string
 }
 
 func GetUserDir() string {

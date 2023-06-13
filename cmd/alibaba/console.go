@@ -18,7 +18,7 @@ func init() {
 	consoleCmd.AddCommand(lsConsoleCmd)
 
 	consoleCmd.Flags().StringVarP(&userName, "userName", "u", "crossfire", "指定用户名 (Specify user name)")
-	consoleCmd.Flags().BoolVarP(&accessKey, "accessKey", "a", false, "创建AccessKey (Create AccessKey)")
+	consoleCmd.Flags().BoolVarP(&accessKey, "accessKey", "a", false, "创建 AccessKey (Create AccessKey)")
 }
 
 var consoleCmd = &cobra.Command{

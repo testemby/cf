@@ -1,15 +1,15 @@
 package alirds
 
 import (
-	"github.com/teamssix/cf/pkg/util/errutil"
+	"fmt"
+	"github.com/AlecAivazis/survey/v2"
 	"github.com/aliyun/alibaba-cloud-sdk-go/services/rds"
 	log "github.com/sirupsen/logrus"
 	"github.com/teamssix/cf/pkg/cloud"
 	"github.com/teamssix/cf/pkg/util"
 	"github.com/teamssix/cf/pkg/util/cmdutil"
 	"github.com/teamssix/cf/pkg/util/database"
-	"github.com/AlecAivazis/survey/v2"
-	"fmt"
+	"github.com/teamssix/cf/pkg/util/errutil"
 	"sort"
 	"strings"
 	"time"
@@ -29,7 +29,7 @@ func AddAccount(region string, specifiedDBInstanceID string, rdsAccount string, 
 		fmt.Println("创建失败，请检查是否具备 CreateAccount 权限或已存在同名用户 (Create failed, please check whether have CreateAccount permissions or existing communications address)")
 		return
 	} else {
-		database.InsertTakeoverConsoleCache("alibabaRds", specifiedDBInstanceID, rdsAccount, password, "")
+		database.InsertTakeoverConsoleCache("alibabaRds", specifiedDBInstanceID, rdsAccount, password, "N/A", "N/A", "N/A")
 		fmt.Println("创建成功，当前用户信息： (Creating an external address succeeded. Querying the current connection address)")
 		data := [][]string{
 			{rdsAccount, password},
@@ -58,17 +58,17 @@ func AddAccount(region string, specifiedDBInstanceID string, rdsAccount string, 
 			request.AccountName = rdsAccount
 
 			switch Engine {
-				case "MySQL":
-					fmt.Println("MySQL数据库无需对数据库具体授权，默认最高权限")
-					return
-				case "SQLServer":
-					request.AccountPrivilege = "DBOwner"
-				case "PostgreSQL":
-					request.AccountPrivilege = "DBOwner"
-				case "MariaDB":
-					request.AccountPrivilege = "ReadWrite"
-				default:
-					request.AccountPrivilege = "ReadWrite"
+			case "MySQL":
+				fmt.Println("MySQL数据库无需对数据库具体授权，默认最高权限")
+				return
+			case "SQLServer":
+				request.AccountPrivilege = "DBOwner"
+			case "PostgreSQL":
+				request.AccountPrivilege = "DBOwner"
+			case "MariaDB":
+				request.AccountPrivilege = "ReadWrite"
+			default:
+				request.AccountPrivilege = "ReadWrite"
 			}
 
 			for _, v := range DBNames { //为此帐号对实例下所有数据库授予最高权限
@@ -101,7 +101,6 @@ func DeleteAccount(region string) {
 	}
 }
 
-
 func AddWhiteList(region string, specifiedDBInstanceID string, rdsWhiteList string) {
 	request := rds.CreateModifySecurityIpsRequest()
 	request.Scheme = "https"
@@ -115,10 +114,10 @@ func AddWhiteList(region string, specifiedDBInstanceID string, rdsWhiteList stri
 	} else {
 		_, err := RDSClient(region).ModifySecurityIps(request)
 		if err != nil {
-		fmt.Println("追加失败，请检查是否具备 ModifySecurityIps 权限和参数是否符合ip地址格式 (Failed to add the ip address. Check whether you have the ModifySecurityIps permission or whether the parameter matches the IP address format)")
+			fmt.Println("追加失败，请检查是否具备 ModifySecurityIps 权限和参数是否符合ip地址格式 (Failed to add the ip address. Check whether you have the ModifySecurityIps permission or whether the parameter matches the IP address format)")
 			return
 		} else {
-			database.InsertTakeoverConsoleCache("alibabaRdsWhiteList", specifiedDBInstanceID, "", "", rdsWhiteList)
+			database.InsertTakeoverConsoleCache("alibabaRdsWhiteList", specifiedDBInstanceID, "", "", rdsWhiteList, "N/A", "N/A")
 			fmt.Println("追加成功，正在查询当前白名单 (Appended successfully and the current whitelist is being queried)")
 			time.Sleep(100 * time.Millisecond)
 			PrintWhiteListInfo(region, specifiedDBInstanceID)
@@ -143,23 +142,22 @@ func DeleteWhiteList(region string) {
 	}
 }
 
-
 func CreateConnection(region string, specifiedDBInstanceID string, rdsConnect string, Engine string) {
 	request := rds.CreateAllocateInstancePublicConnectionRequest()
 	request.Scheme = "https"
 	request.DBInstanceId = specifiedDBInstanceID
 	request.ConnectionStringPrefix = rdsConnect
 	switch Engine {
-		case "MySQL":
-			request.Port = "3306"
-		case "SQLServer":
-			request.Port = "1433"
-		case "PostgreSQL":
-			request.Port = "5432"
-		case "MariaDB":
-			request.Port = "3306"
-		default:
-			request.Port = "3306"
+	case "MySQL":
+		request.Port = "3306"
+	case "SQLServer":
+		request.Port = "1433"
+	case "PostgreSQL":
+		request.Port = "5432"
+	case "MariaDB":
+		request.Port = "3306"
+	default:
+		request.Port = "3306"
 	}
 
 	_, err := RDSClient(region).AllocateInstancePublicConnection(request)
@@ -167,7 +165,7 @@ func CreateConnection(region string, specifiedDBInstanceID string, rdsConnect st
 		fmt.Println("创建失败，请检查是否具备 AllocateInstancePublicConnection 权限或已存在外联地址 (Create failed, please check whether have AllocateInstancePublicConnection permissions or existing communications address)")
 		return
 	} else {
-		database.InsertTakeoverConsoleCache("alibabaRdsConnect", specifiedDBInstanceID, "", "", rdsConnect)
+		database.InsertTakeoverConsoleCache("alibabaRdsConnect", specifiedDBInstanceID, "", "", rdsConnect, "N/A", "N/A")
 		fmt.Println("创建外联地址成功，正在查询当前连接地址 (Creating an external address succeeded. Querying the current connection address)")
 		time.Sleep(100 * time.Millisecond)
 		PrintNetInfo(region, specifiedDBInstanceID)
@@ -244,8 +242,8 @@ func PrintWhiteListInfo(region string, specifiedDBInstanceID string) {
 
 	var data [][]string
 	for _, v := range response.Items.DBInstanceIPArray {
-	    row := []string{v.DBInstanceIPArrayName, v.SecurityIPType, v.SecurityIPList}
-	    data = append(data, row)
+		row := []string{v.DBInstanceIPArrayName, v.SecurityIPType, v.SecurityIPList}
+		data = append(data, row)
 	}
 	var header = []string{"白名单名称 (IPArrayName)", "IP类型 (SecurityIPType)", "IP列表 (SecurityIPList)"}
 	var td = cloud.TableData{Header: header, Body: data}
@@ -276,8 +274,7 @@ func PrintAccountInfo(region string, specifiedDBInstanceID string) {
 
 }
 
-
-func DBInstancesExec(region string, running bool, specifiedDBInstanceID string, engine string, lsFlushCache bool, rdsInfo bool, rdsConnect string, rdsConnectCancel bool, rdsWhiteList string , rdsWhiteListCancel bool, rdsAccount string ,rdsAccountCancel bool) {
+func DBInstancesExec(region string, running bool, specifiedDBInstanceID string, engine string, lsFlushCache bool, rdsInfo bool, rdsConnect string, rdsConnectCancel bool, rdsWhiteList string, rdsWhiteListCancel bool, rdsAccount string, rdsAccountCancel bool) {
 	var InstancesList []DBInstances
 	if lsFlushCache == false {
 		data := cmdutil.ReadRDSCache("alibaba")
@@ -308,11 +305,11 @@ func DBInstancesExec(region string, running bool, specifiedDBInstanceID string, 
 			case specifiedDBInstanceID == "all" && region != "all":
 				if region == v.RegionId {
 					obj := DBInstances{
-					DBInstanceId:     v.DBInstanceId,
-					Engine:           v.Engine,
-					EngineVersion:    v.EngineVersion,
-					DBInstanceStatus: v.DBInstanceStatus,
-					RegionId:         v.RegionId,
+						DBInstanceId:     v.DBInstanceId,
+						Engine:           v.Engine,
+						EngineVersion:    v.EngineVersion,
+						DBInstanceStatus: v.DBInstanceStatus,
+						RegionId:         v.RegionId,
 					}
 					InstancesList = append(InstancesList, obj)
 				}
@@ -375,7 +372,7 @@ func DBInstancesExec(region string, running bool, specifiedDBInstanceID string, 
 				PrintDataBases(region, specifiedDBInstanceID)
 			}
 
-			if i.DBInstanceStatus == "Running"{
+			if i.DBInstanceStatus == "Running" {
 				num += 1
 				if rdsConnect != "" {
 					CreateConnection(region, specifiedDBInstanceID, rdsConnect, i.Engine)
@@ -383,10 +380,10 @@ func DBInstancesExec(region string, running bool, specifiedDBInstanceID string, 
 					CancelConnection(region)
 				} else if rdsWhiteList != "" {
 					AddWhiteList(region, specifiedDBInstanceID, rdsWhiteList)
-				} else if rdsWhiteListCancel{
-				    DeleteWhiteList(region)
+				} else if rdsWhiteListCancel {
+					DeleteWhiteList(region)
 				} else if rdsAccount != "" {
-					AddAccount(region , specifiedDBInstanceID , rdsAccount, i.Engine)
+					AddAccount(region, specifiedDBInstanceID, rdsAccount, i.Engine)
 				} else if rdsAccountCancel {
 					DeleteAccount(region)
 				}

