@@ -19,8 +19,12 @@ CF 是一个云环境利用框架，适用于在红队场景中对云上内网�
 
 CF 下载地址：[github.com/teamssix/cf/releases](https://github.com/teamssix/cf/releases)
 
+<details> <summary>CF 命令使用大全</summary><br>
+    
 ![](https://cdn.jsdelivr.net/gh/teamssix/BlogImages/imgs/202304291915242.png)
-
+    
+</details>
+    
 当前已支持的云：
 
 - [x] 阿里云
@@ -57,6 +61,7 @@ CF 下载地址：[github.com/teamssix/cf/releases](https://github.com/teamssix/
 
 |                标题                | 所使用的 CF 版本 |                           文章地址                           |   作者   |  发布时间  |
 | :--------------------------------: | :--------------: | :----------------------------------------------------------: | :------: | :--------: |
+|    《记一次打穿云上内网的攻防实战》    |      v0.4.5      | [https://zone.huoxian.cn/d/2766](https://zone.huoxian.cn/d/2766) | Walker 沃克 | 2023.5.21 |
 |    《一次简单的"云"上野战记录》    |      v0.4.2      | [https://mp.weixin.qq.com/s/wi8C...](https://mp.weixin.qq.com/s/wi8CoNwdpfJa6eMP4t1PCQ) | carrypan | 2022.10.19 |
 | 《记录一次平平无奇的云上攻防过程》 |      v0.4.0      | [https://zone.huoxian.cn/d/2557](https://zone.huoxian.cn/d/2557) | TeamsSix | 2022.9.14  |
 |   《我用 CF 打穿了他的云上内网》   |      v0.2.4      | [https://zone.huoxian.cn/d/1341-cf](https://zone.huoxian.cn/d/1341-cf) | TeamsSix | 2022.7.13  |
