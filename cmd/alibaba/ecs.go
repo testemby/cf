@@ -51,7 +51,7 @@ func init() {
 	ecsExecCmd.Flags().BoolVarP(&batchCommand, "batchCommand", "b", false, "一键执行三要素，方便 HW (Batch execution of multiple commands used to prove permission acquisition)")
 	ecsExecCmd.Flags().BoolVarP(&userData, "userData", "u", false, "一键获取实例中的用户数据 (Get the user data on the instance)")
 	ecsExecCmd.Flags().StringVar(&userDataBackdoor, "userDataBackdoor", "", "输入后门命令，该命令会在实例重启后被执行 (Enter a backdoor command that will be executed after the instance restarts)")
-	ecsExecCmd.Flags().StringVar(&imageShare, "imageShare", "", "输入云租户的帐号 ID 进行镜像共享 (Enter the account ID for image sharing.)")
+	ecsExecCmd.Flags().StringVar(&imageShare, "imageShare", "", "输入云租户的帐号 ID 进行镜像共享 (Enter the account ID for image sharing)")
 	ecsExecCmd.Flags().BoolVarP(&metaDataSTSToken, "metaDataSTSToken", "m", false, "一键获取实例元数据中的临时访问密钥 (Get the STS Token in the instance metadata)")
 	ecsExecCmd.Flags().IntVarP(&timeOut, "timeOut", "t", 60, "设置命令执行结果的等待时间 (Set the command execution result waiting time)")
 	ecsExecCmd.Flags().BoolVarP(&ecsExecAllRegions, "allRegions", "a", false, "使用所有区域，包括私有区域 (Use all regions, including private regions)")

