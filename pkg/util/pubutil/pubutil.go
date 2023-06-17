@@ -6,61 +6,73 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+	"time"
 
 	log "github.com/sirupsen/logrus"
 	"github.com/teamssix/cf/pkg/util/global"
 )
 
 type TimestampCache struct {
-	TimestampType string
 	Timestamp     int64
+	TimestampType string
 }
 
 type OSSCache struct {
 	AccessKeyId  string
-	SN           string
-	Name         string
 	BucketACL    string
+	BucketURL    string
+	Name         string
 	ObjectNumber string
 	ObjectSize   string
 	Region       string
-	BucketURL    string
+	SN           string
 }
 
 type ECSCache struct {
 	AccessKeyId      string
-	SN               string
 	InstanceId       string
 	InstanceName     string
 	OSName           string
 	OSType           string
-	Status           string
 	PrivateIpAddress string
 	PublicIpAddress  string
 	RegionId         string
+	SN               string
+	Status           string
 }
 
 type RDSCache struct {
 	AccessKeyId      string
-	SN               string
 	DBInstanceId     string
+	DBInstanceStatus string
 	Engine           string
 	EngineVersion    string
-	DBInstanceStatus string
 	RegionId         string
+	SN               string
 }
 
 type TakeoverConsoleCache struct {
-	Provider               string
 	AccessKeyId            string
-	PrimaryAccountID       string
-	UserId                 string
-	UserName               string
-	Password               string
-	LoginUrl               string
 	ConsoleAccessKeyId     string
 	ConsoleAccessKeySecret string
 	CreateTime             string
+	LoginUrl               string
+	Password               string
+	PrimaryAccountID       string
+	Provider               string
+	UserId                 string
+	UserName               string
+}
+
+type ImageShareCache struct {
+	AccessKeyId    string
+	ImageID        string
+	InstanceID     string
+	Provider       string
+	Region         string
+	ShareAccountID string
+	Status         string
+	Time           string
 }
 
 func GetUserDir() string {
@@ -150,4 +162,10 @@ func IN(target string, str_array []string) bool {
 		}
 	}
 	return false
+}
+
+func CurrentTime() string {
+	currentTime := time.Now()
+	formattedTime := currentTime.Format("2006-01-02 15:04:05")
+	return formattedTime
 }
