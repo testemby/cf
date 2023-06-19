@@ -76,7 +76,25 @@ func AddAccount(region string, specifiedDBInstanceID string, rdsAccount string, 
 				RDSClient(region).GrantAccountPrivilege(request)
 			}
 			time.Sleep(100 * time.Millisecond)
-			PrintDataBases(region, specifiedDBInstanceID)
+			DataBases := GetDataBases(region, specifiedDBInstanceID)
+			if len(DataBases) > 0 {
+				var data [][]string
+				for _, v := range DataBases {
+					privileges := make([]string, len(v.Accounts.AccountPrivilegeInfo))
+					for i, privilege := range v.Accounts.AccountPrivilegeInfo {
+						if privilege.AccountPrivilegeDetail == "" {
+							privileges[i] = privilege.Account + " (" + privilege.AccountPrivilege + ")"
+						} else {
+							privileges[i] = privilege.Account + " (" + privilege.AccountPrivilege + ", " + privilege.AccountPrivilegeDetail + ")"
+						}
+					}
+					row := []string{v.DBName, strings.Join(privileges, ", ")}
+					data = append(data, row)
+				}
+				var header = []string{"数据库名 (DBName)", "授权情况 (privileges)"}
+				var td = cloud.TableData{Header: header, Body: data}
+				cloud.PrintTable(td, "")
+			}
 		}
 	}
 }
@@ -120,7 +138,15 @@ func AddWhiteList(region string, specifiedDBInstanceID string, rdsWhiteList stri
 			database.InsertTakeoverConsoleCache("alibabaRdsWhiteList", specifiedDBInstanceID, "", "", rdsWhiteList, "N/A", "N/A")
 			fmt.Println("追加成功，正在查询当前白名单 (Appended successfully and the current whitelist is being queried)")
 			time.Sleep(100 * time.Millisecond)
-			PrintWhiteListInfo(region, specifiedDBInstanceID)
+			var data [][]string
+			for _, v := range GetWhiteListInfo(region, specifiedDBInstanceID) {
+				row := []string{v.DBInstanceIPArrayName, v.SecurityIPType, v.SecurityIPList}
+				data = append(data, row)
+			}
+			var header = []string{"白名单名称 (IPArrayName)", "IP类型 (SecurityIPType)", "IP列表 (SecurityIPList)"}
+			var td = cloud.TableData{Header: header, Body: data}
+			cloud.PrintTable(td, "")
+
 		}
 	}
 }
@@ -168,7 +194,14 @@ func CreateConnection(region string, specifiedDBInstanceID string, rdsConnect st
 		database.InsertTakeoverConsoleCache("alibabaRdsConnect", specifiedDBInstanceID, "", "", rdsConnect, "N/A", "N/A")
 		fmt.Println("创建外联地址成功，正在查询当前连接地址 (Creating an external address succeeded. Querying the current connection address)")
 		time.Sleep(100 * time.Millisecond)
-		PrintNetInfo(region, specifiedDBInstanceID)
+		var data [][]string
+		for _, v := range GetNetInfo(region, specifiedDBInstanceID) {
+			row := []string{v.IPAddress, v.ConnectionString, v.IPType, v.Port}
+			data = append(data, row)
+		}
+		var header = []string{"IP地址 (IPAddress)", "连接地址 (ConnectionString)", "连接类型 (IPType)", "端口 (Port)"}
+		var td = cloud.TableData{Header: header, Body: data}
+		cloud.PrintTable(td, "")
 	}
 }
 
@@ -191,90 +224,7 @@ func CancelConnection(region string) {
 	}
 }
 
-func PrintDataBases(region string, specifiedDBInstanceID string) {
-	request := rds.CreateDescribeDatabasesRequest()
-	request.Scheme = "https"
-	request.DBInstanceId = specifiedDBInstanceID
-	request.QueryParams["output"] = "cols=DBName,DBStatus,Engine rows=Databases.Database[]"
-	response, err := RDSClient(region).DescribeDatabases(request)
-	errutil.HandleErrNoExit(err)
-
-	if len(response.Databases.Database) > 0 {
-		var data [][]string
-		for _, v := range response.Databases.Database {
-			privileges := make([]string, len(v.Accounts.AccountPrivilegeInfo))
-			for i, privilege := range v.Accounts.AccountPrivilegeInfo {
-				privileges[i] = privilege.Account + "(" + privilege.AccountPrivilege + ", " + privilege.AccountPrivilegeDetail + ")"
-			}
-			row := []string{v.DBName, strings.Join(privileges, ", ")}
-			data = append(data, row)
-		}
-		var header = []string{"数据库名 (DBName)", "授权情况 (privileges)"}
-		var td = cloud.TableData{Header: header, Body: data}
-		cloud.PrintTable(td, "")
-	}
-}
-
-func PrintNetInfo(region string, specifiedDBInstanceID string) {
-	request := rds.CreateDescribeDBInstanceNetInfoRequest()
-	request.Scheme = "https"
-	request.DBInstanceId = specifiedDBInstanceID
-	request.QueryParams["output"] = "cols=IPAddress,ConnectionString,IPType,Port rows=DBInstanceNetInfos.DBInstanceNetInfo[]"
-	response, err := RDSClient(region).DescribeDBInstanceNetInfo(request)
-	errutil.HandleErrNoExit(err)
-
-	var data [][]string
-	for _, v := range response.DBInstanceNetInfos.DBInstanceNetInfo {
-		row := []string{v.IPAddress, v.ConnectionString, v.IPType, v.Port}
-		data = append(data, row)
-	}
-	var header = []string{"IP地址 (IPAddress)", "连接地址 (ConnectionString)", "连接类型 (IPType)", "端口 (Port)"}
-	var td = cloud.TableData{Header: header, Body: data}
-	cloud.PrintTable(td, "")
-}
-
-func PrintWhiteListInfo(region string, specifiedDBInstanceID string) {
-	request := rds.CreateDescribeDBInstanceIPArrayListRequest()
-	request.Scheme = "https"
-	request.DBInstanceId = specifiedDBInstanceID
-	response, err := RDSClient(region).DescribeDBInstanceIPArrayList(request)
-	errutil.HandleErrNoExit(err)
-
-	var data [][]string
-	for _, v := range response.Items.DBInstanceIPArray {
-		row := []string{v.DBInstanceIPArrayName, v.SecurityIPType, v.SecurityIPList}
-		data = append(data, row)
-	}
-	var header = []string{"白名单名称 (IPArrayName)", "IP类型 (SecurityIPType)", "IP列表 (SecurityIPList)"}
-	var td = cloud.TableData{Header: header, Body: data}
-	cloud.PrintTable(td, "")
-}
-
-func PrintAccountInfo(region string, specifiedDBInstanceID string) {
-	request := rds.CreateDescribeAccountsRequest()
-	request.Scheme = "https"
-	request.DBInstanceId = specifiedDBInstanceID
-	response, err := RDSClient(region).DescribeAccounts(request)
-	errutil.HandleErrNoExit(err)
-
-	if len(response.Accounts.DBInstanceAccount) > 0 {
-		var data [][]string
-		for _, v := range response.Accounts.DBInstanceAccount {
-			privileges := make([]string, len(v.DatabasePrivileges.DatabasePrivilege))
-			for i, privilege := range v.DatabasePrivileges.DatabasePrivilege {
-				privileges[i] = privilege.DBName + "(" + privilege.AccountPrivilege + ", " + privilege.AccountPrivilegeDetail + ")"
-			}
-			row := []string{v.AccountStatus, v.AccountName, v.AccountType, strings.Join(privileges, ", ")}
-			data = append(data, row)
-		}
-		var header = []string{"账号状态 (AccountStatus)", "账号 (AccountName)", "账号类型 (AccountType)", "数据库权限 (DatabasePrivilege)"}
-		var td = cloud.TableData{Header: header, Body: data}
-		cloud.PrintTable(td, "")
-	}
-
-}
-
-func DBInstancesExec(region string, running bool, specifiedDBInstanceID string, engine string, lsFlushCache bool, rdsInfo bool, rdsConnect string, rdsConnectCancel bool, rdsWhiteList string, rdsWhiteListCancel bool, rdsAccount string, rdsAccountCancel bool) {
+func DBInstancesExec(region string, running bool, specifiedDBInstanceID string, engine string, lsFlushCache bool, rdsConnect string, rdsConnectCancel bool, rdsWhiteList string, rdsWhiteListCancel bool, rdsAccount string, rdsAccountCancel bool) {
 	var InstancesList []DBInstances
 	if lsFlushCache == false {
 		data := cmdutil.ReadRDSCache("alibaba")
@@ -364,13 +314,6 @@ func DBInstancesExec(region string, running bool, specifiedDBInstanceID string, 
 		for _, i := range InstancesList {
 			specifiedDBInstanceID := i.DBInstanceId
 			region := i.RegionId
-
-			if rdsInfo {
-				PrintNetInfo(region, specifiedDBInstanceID)
-				PrintWhiteListInfo(region, specifiedDBInstanceID)
-				PrintAccountInfo(region, specifiedDBInstanceID)
-				PrintDataBases(region, specifiedDBInstanceID)
-			}
 
 			if i.DBInstanceStatus == "Running" {
 				num += 1
