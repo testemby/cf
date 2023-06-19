@@ -9,7 +9,6 @@ import (
 	"github.com/teamssix/cf/pkg/cloud"
 	"github.com/teamssix/cf/pkg/util"
 	"github.com/teamssix/cf/pkg/util/cmdutil"
-	"github.com/teamssix/cf/pkg/util/database"
 	"github.com/teamssix/cf/pkg/util/errutil"
 	"sort"
 	"strconv"
@@ -142,8 +141,10 @@ func PrintDBInstancesListHistory(region string, running bool, specifiedDBInstanc
 
 func PrintDBInstancesList(region string, running bool, specifiedDBInstanceID string, engine string, lsFlushCache bool, all bool) {
 	if all {
-		//DBInstancesList := ReturnDBInstancesList("cn-wulanchabu", false, "all", "all")
-		DBInstancesList := database.SelectRDSCacheFilter("alibaba", region, specifiedDBInstanceID, engine)
+		DBInstancesList := ReturnDBInstancesList("all", false, "all", "all")
+		if len(DBInstancesList) == 0 {
+			log.Info("未发现 RDS 资源 (No RDS resources found)")
+		}
 		for k, v := range DBInstancesList {
 			color.Tag("danger").Println(fmt.Sprintf("\n%d %s 实例信息 (%s Instance information)", k+1, v.DBInstanceId, v.DBInstanceId))
 
@@ -226,7 +227,7 @@ func PrintDBInstancesList(region string, running bool, specifiedDBInstanceID str
 					}
 				}
 			} else {
-				fmt.Println("没有找到任何信息 (No information found)")
+				fmt.Println("没有找到任何信息 (No information found)\n")
 			}
 
 			color.Tag("warn").Println("数据库信息 (Databases information)")
@@ -254,7 +255,7 @@ func PrintDBInstancesList(region string, running bool, specifiedDBInstanceID str
 					}
 				}
 			} else {
-				fmt.Println("没有找到任何信息 (No information found)")
+				fmt.Println("没有找到任何信息 (No information found)\n")
 			}
 		}
 	} else {
