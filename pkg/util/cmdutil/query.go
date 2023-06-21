@@ -21,26 +21,28 @@ func QueryAccessKey() {
 	    }
 	    survey.AskOne(prompt, &accesskey)
 	    fmt.Println()
+
+	    accesskey = strings.TrimSpace(accesskey)
 	    if accesskey == "exit" {
 	        break
 	    }
 
 	    switch {
-		    case (strings.HasPrefix(accesskey, "AKIA") || strings.HasPrefix(accesskey, "ASIA")): //已验证完全正确
+		    case (strings.HasPrefix(accesskey, "AKIA") || strings.HasPrefix(accesskey, "ASIA")): //固定前缀正确，长度验证未加
 		        result = "AWS"
 		    case (strings.HasPrefix(accesskey, "GOOG") || strings.HasPrefix(accesskey, "AIza")):
 		        result = "谷歌云 (Google Cloud)"
-		    case (strings.HasPrefix(accesskey, "LTAI") || strings.HasPrefix(accesskey, "STS")): //已验证完全正确
+		    case (regexp.MustCompile("^LTAI[0-9a-zA-Z]{20}$").MatchString(accesskey) || strings.HasPrefix(accesskey, "STS")): //已验证完全正确
 		        result = "阿里云 (Aliyun)"
-		    case strings.HasPrefix(accesskey, "AKID"): //已验证完全正确
+		    case regexp.MustCompile("^AKID[0-9a-zA-Z]{32}$").MatchString(accesskey): //已验证完全正确
 		        result = "腾讯云 (Tencent Cloud)"
-		    case strings.HasPrefix(accesskey, "ALTA"): //已验证完全正确
+		    case regexp.MustCompile("^ALTAK[0-9a-zA-Z]{21}$").MatchString(accesskey): //已验证完全正确
 		        result = "百度云 (Baidu Cloud)"
 		    case strings.HasPrefix(accesskey, "UCLOUD"):
 		        result = "UCloud"
 			case regexp.MustCompile("^AKLT[\\w-]{20}$").MatchString(accesskey): //已验证完成正确
 			    result = "金山云 (Kingsoft Cloud)"
-			case strings.HasPrefix(accesskey, "JDC_"): //已验证完全正确
+			case regexp.MustCompile("^JDC_[0-9A-Z]{28}$").MatchString(accesskey): //已验证完全正确
 			    result = "京东云 (Jingdong Cloud)"
 			case (strings.HasPrefix(accesskey, "AKL") || strings.HasPrefix(accesskey, "AKTP")):
 			    result = "火山引擎 (Volcano Engine)"
