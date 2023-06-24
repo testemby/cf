@@ -7,6 +7,7 @@ require (
 	github.com/aliyun/alibaba-cloud-sdk-go v1.61.1685
 	github.com/aliyun/aliyun-oss-go-sdk v2.2.4+incompatible
 	github.com/aws/aws-sdk-go v1.44.109
+	github.com/baidubce/bce-sdk-go v0.9.151
 	github.com/bitly/go-simplejson v0.5.0
 	github.com/gookit/color v1.5.1
 	github.com/huaweicloud/huaweicloud-sdk-go-obs v3.23.3+incompatible

@@ -40,6 +40,8 @@ func IdentifyAccessKey() {
 		os.Exit(0)
 	} else if HuoshanIdentity(cred.AccessKeyId, cred.AccessKeySecret) {
 		os.Exit(0)
+	} else if BaiduIdentity(cred.AccessKeyId, cred.AccessKeySecret, cred.STSToken) {
+		os.Exit(0)
 	} else {
 		log.Errorln("AccessKey 无法识别 (AccessKey cannot be identified)")
 	}
@@ -161,6 +163,7 @@ func HuoshanIdentity(accessKey, secretKey string) bool {
 	b, _ := json.Marshal(resp)
 	if strings.Contains(string(b), "InvalidAccessKey") {
 		log.Errorln("AccessKey 不属于火山引擎 (AccessKey does not belong to Huoshan Engine)")
+		return false
 	} else if strings.Contains(string(b), "SignatureDoesNotMatch") {
 		log.Infoln("AccessKey 属于火山引擎 (AccessKey belongs to Huoshan Engine)")
 		log.Errorln("AccessKeySecret 似乎输入有误 (AccessKeySecret appears to be incorrect)")
@@ -168,7 +171,19 @@ func HuoshanIdentity(accessKey, secretKey string) bool {
 	}
 	log.Infoln("AccessKey 属于火山引擎 (AccessKey belongs to Huoshan Engine)")
 	return true
+}
 
+func BaiduIdentity(accessKey, secretKey, stsToken string) bool {
+	client := BCEIAMClient(accessKey, secretKey, stsToken)
+	_, err := client.ListUser()
+	if err != nil {
+		if strings.Contains(err.Error(), "AccessDenied") {
+			log.Errorln("AccessKey 不属于百度云 (AccessKey does not belong to Baidu Cloud)")
+			return false
+		}
+	}
+	log.Infoln("AccessKey 属于百度云 (AccessKey belongs to Baidu Cloud)")
+	return true
 }
 
 func InputAccessKey() credential {
