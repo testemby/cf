@@ -1,6 +1,7 @@
 package identify
 
 import (
+	"encoding/json"
 	"github.com/AlecAivazis/survey/v2"
 	alibabaSts "github.com/aliyun/alibaba-cloud-sdk-go/services/sts"
 	"github.com/aws/aws-sdk-go/aws/awserr"
@@ -10,6 +11,8 @@ import (
 	"github.com/qiniu/go-sdk/v7/storage"
 	log "github.com/sirupsen/logrus"
 	tencentSts "github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/sts/v20180813"
+	"github.com/volcengine/volc-sdk-golang/service/visual"
+	"net/url"
 	"os"
 	"strings"
 )
@@ -35,9 +38,10 @@ func IdentifyAccessKey() {
 		os.Exit(0)
 	} else if QiniuIdentity(cred.AccessKeyId, cred.AccessKeySecret) {
 		os.Exit(0)
+	} else if HuoshanIdentity(cred.AccessKeyId, cred.AccessKeySecret) {
+		os.Exit(0)
 	} else {
 		log.Errorln("AccessKey 无法识别 (AccessKey cannot be identified)")
-		os.Exit(0)
 	}
 }
 
@@ -144,6 +148,27 @@ func QiniuIdentity(accessKey, secretKey string) bool {
 	}
 	log.Infoln("AccessKey 属于七牛云 (AccessKey belongs to Qiniu Cloud)")
 	return true
+}
+
+func HuoshanIdentity(accessKey, secretKey string) bool {
+	visual.DefaultInstance.Client.SetAccessKey(accessKey)
+	visual.DefaultInstance.Client.SetSecretKey(secretKey)
+
+	form := url.Values{}
+	form.Add("image_base64", "")
+
+	resp, _, _ := visual.DefaultInstance.BankCard(form)
+	b, _ := json.Marshal(resp)
+	if strings.Contains(string(b), "InvalidAccessKey") {
+		log.Errorln("AccessKey 不属于火山引擎 (AccessKey does not belong to Huoshan Engine)")
+	} else if strings.Contains(string(b), "SignatureDoesNotMatch") {
+		log.Infoln("AccessKey 属于火山引擎 (AccessKey belongs to Huoshan Engine)")
+		log.Errorln("AccessKeySecret 似乎输入有误 (AccessKeySecret appears to be incorrect)")
+		return true
+	}
+	log.Infoln("AccessKey 属于火山引擎 (AccessKey belongs to Huoshan Engine)")
+	return true
+
 }
 
 func InputAccessKey() credential {

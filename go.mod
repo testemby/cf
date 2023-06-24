@@ -26,6 +26,7 @@ require (
 	github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/sts v1.0.475
 	github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/tat v1.0.447
 	github.com/thoas/go-funk v0.9.3
+	github.com/volcengine/volc-sdk-golang v1.0.105
 	github.com/x-cray/logrus-prefixed-formatter v0.5.2
 	gorm.io/gorm v1.23.8
 )
@@ -33,6 +34,7 @@ require (
 require (
 	github.com/baiyubin/aliyun-sts-go-sdk v0.0.0-20180326062324-cfa1a18b161f // indirect
 	github.com/bmizerany/assert v0.0.0-20160611221934-b7ed37b82869 // indirect
+	github.com/cenkalti/backoff/v4 v4.1.2 // indirect
 	github.com/fatih/color v1.13.0 // indirect
 	github.com/google/go-cmp v0.5.8 // indirect
 	github.com/google/uuid v1.3.0 // indirect
@@ -59,6 +61,7 @@ require (
 	go.mongodb.org/mongo-driver v1.11.2 // indirect
 	golang.org/x/crypto v0.7.0 // indirect
 	golang.org/x/mod v0.8.0 // indirect
+	golang.org/x/net v0.8.0 // indirect
 	golang.org/x/sync v0.1.0 // indirect
 	golang.org/x/sys v0.6.0 // indirect
 	golang.org/x/term v0.6.0 // indirect
