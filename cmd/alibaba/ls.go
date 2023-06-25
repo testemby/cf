@@ -31,6 +31,6 @@ var lsCmd = &cobra.Command{
 		fmt.Println("")
 		aliecs.PrintInstancesList(lsRegion, false, "all", lsFlushCache, lsAllRegions)
 		fmt.Println("")
-		alirds.PrintDBInstancesList(lsRegion, false, "all", "all", lsFlushCache)
+		alirds.PrintDBInstancesList(lsRegion, false, "all", "all", lsFlushCache, false)
 	},
 }

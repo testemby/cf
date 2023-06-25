@@ -51,7 +51,7 @@ func DescribeInstances(region string, running bool, SpecifiedInstanceID string, 
 	errutil.HandleErr(err)
 	InstancesList := response.Instances.Instance
 	if len(InstancesList) != 0 {
-		log.Infof("在 %s 区域下找到 %d 个实例 (Found %d instances in %s region)", region, len(InstancesList), len(InstancesList), region)
+		log.Warnf("在 %s 区域下找到 %d 个实例 (Found %d instances in %s region)", region, len(InstancesList), len(InstancesList), region)
 		for _, i := range InstancesList {
 			// When the instance has multiple IPs, it is presented in a different format.
 			var PrivateIpAddressList []string
