@@ -14,6 +14,7 @@ func init() {
 	configCmd.AddCommand(ConfigMf)
 	configCmd.AddCommand(ConfigSw)
 	configCmd.AddCommand(ConfigScan)
+	configCmd.AddCommand(ConfigQuery)
 
 	ConfigLs.PersistentFlags().BoolVarP(&selectAll, "all", "a", false, "查询全部数据 (Search all data)")
 	ConfigScan.PersistentFlags().BoolVarP(&selectAll, "all", "a", false, "查询全部数据 (Search all data)")
@@ -70,5 +71,14 @@ var ConfigScan = &cobra.Command{
 	Long:  `扫描本地访问密钥 (Scan for local access keys)`,
 	Run: func(cmd *cobra.Command, args []string) {
 		cmdutil.ScanAccessKey(selectAll)
+	},
+}
+
+var ConfigQuery = &cobra.Command{
+	Use:   "query",
+	Short: "查询AK对应厂商 (Query access keys cloud provider)",
+	Long:  `查询AK对应厂商 (Query access keys cloud provider)`,
+	Run: func(cmd *cobra.Command, args []string) {
+		cmdutil.QueryAccessKey()
 	},
 }
