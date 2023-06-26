@@ -28,9 +28,9 @@ func QueryAccessKey() {
 	    }
 
 	    switch {
-		    case (strings.HasPrefix(accesskey, "AKIA") || strings.HasPrefix(accesskey, "ASIA")): //固定前缀正确，长度验证未加
+		    case regexp.MustCompile("(A3T[A-Z0-9]|AKIA|AGPA|AIDA|AROA|AIPA|ANPA|ANVA|ASIA)[A-Z0-9]{16}").MatchString(accesskey): //正则源自RExpository
 		        result = "AWS"
-		    case (strings.HasPrefix(accesskey, "GOOG") || strings.HasPrefix(accesskey, "AIza")):
+		    case regexp.MustCompile("AIza[0-9A-Za-z_\\-]{35}").MatchString(accesskey): //正则源自RExpository
 		        result = "谷歌云 (Google Cloud)"
 		    case (regexp.MustCompile("^LTAI[0-9a-zA-Z]{20}$").MatchString(accesskey) || strings.HasPrefix(accesskey, "STS")): //已验证完全正确
 		        result = "阿里云 (Aliyun)"
