@@ -31,7 +31,7 @@ type Instances struct {
 	RegionId         string
 }
 
-func DescribeInstances(region string, running bool, specifiedInstanceID string, offSet int64) []Instances {
+func DescribeInstances(region string, running bool, specifiedInstanceId string, offSet int64) []Instances {
 	request := cvm.NewDescribeInstancesRequest()
 	request.Offset = common.Int64Ptr(offSet)
 	request.Limit = common.Int64Ptr(100)
@@ -44,8 +44,8 @@ func DescribeInstances(region string, running bool, specifiedInstanceID string, 
 			},
 		}
 	}
-	if specifiedInstanceID != "all" {
-		request.InstanceIds = common.StringPtrs([]string{specifiedInstanceID})
+	if specifiedInstanceId != "all" {
+		request.InstanceIds = common.StringPtrs([]string{specifiedInstanceId})
 	}
 	response, err := CVMClient(region).DescribeInstances(request)
 	errutil.HandleErr(err)
@@ -100,31 +100,31 @@ func DescribeInstances(region string, running bool, specifiedInstanceID string, 
 		}
 	}
 	if InstancesTotalCount > int64(len(InstancesOut)) {
-		_ = DescribeInstances(region, running, specifiedInstanceID, int64(len(InstancesOut)))
+		_ = DescribeInstances(region, running, specifiedInstanceId, int64(len(InstancesOut)))
 	}
 	return InstancesOut
 }
 
-func ReturnInstancesList(region string, running bool, specifiedInstanceID string) []Instances {
+func ReturnInstancesList(region string, running bool, specifiedInstanceId string) []Instances {
 	var InstancesList []Instances
 	var Instance []Instances
 	if region == "all" {
 		for _, j := range GetCVMRegions() {
 			region := *j.Region
-			Instance = DescribeInstances(region, running, specifiedInstanceID, 0)
+			Instance = DescribeInstances(region, running, specifiedInstanceId, 0)
 			InstancesOut = nil
 			for _, i := range Instance {
 				InstancesList = append(InstancesList, i)
 			}
 		}
 	} else {
-		InstancesList = DescribeInstances(region, running, specifiedInstanceID, 0)
+		InstancesList = DescribeInstances(region, running, specifiedInstanceId, 0)
 	}
 	return InstancesList
 }
 
-func PrintInstancesListRealTime(region string, running bool, specifiedInstanceID string) {
-	InstancesList := ReturnInstancesList(region, running, specifiedInstanceID)
+func PrintInstancesListRealTime(region string, running bool, specifiedInstanceId string) {
+	InstancesList := ReturnInstancesList(region, running, specifiedInstanceId)
 	var data = make([][]string, len(InstancesList))
 	for i, o := range InstancesList {
 		SN := strconv.Itoa(i + 1)
@@ -137,17 +137,17 @@ func PrintInstancesListRealTime(region string, running bool, specifiedInstanceID
 		Caption := "CVM 资源 (CVM resources)"
 		cloud.PrintTable(td, Caption)
 	}
-	cmdutil.WriteCacheFile(td, "tencent", "cvm", region, specifiedInstanceID)
+	cmdutil.WriteCacheFile(td, "tencent", "cvm", region, specifiedInstanceId)
 }
 
-func PrintInstancesListHistory(region string, running bool, specifiedInstanceID string) {
-	cmdutil.PrintECSCacheFile(header, region, specifiedInstanceID, "tencent", "CVM", running)
+func PrintInstancesListHistory(region string, running bool, specifiedInstanceId string) {
+	cmdutil.PrintECSCacheFile(header, region, specifiedInstanceId, "tencent", "CVM", running)
 }
 
-func PrintInstancesList(region string, running bool, specifiedInstanceID string, cvmFlushCache bool) {
+func PrintInstancesList(region string, running bool, specifiedInstanceId string, cvmFlushCache bool) {
 	if cvmFlushCache {
-		PrintInstancesListRealTime(region, running, specifiedInstanceID)
+		PrintInstancesListRealTime(region, running, specifiedInstanceId)
 	} else {
-		PrintInstancesListHistory(region, running, specifiedInstanceID)
+		PrintInstancesListHistory(region, running, specifiedInstanceId)
 	}
 }

@@ -13,7 +13,7 @@ func SelectImageShareCache(provider string) []pubutil.ImageShareCache {
 	return ImageShareCache
 }
 
-func DeleteImageShareCache(ImageID string) {
+func DeleteImageShareCache(ImageId string) {
 	var ImageShareCache []pubutil.ImageShareCache
-	CacheDb.Where("image_id = ?", ImageID).Delete(&ImageShareCache)
+	CacheDb.Where("image_id = ?", ImageId).Delete(&ImageShareCache)
 }

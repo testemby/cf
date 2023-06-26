@@ -15,52 +15,52 @@ import (
 	"time"
 )
 
-func ECSImageShare(aliyunAccount string, region string, specifiedInstanceID string) {
-	if specifiedInstanceID == "all" {
+func ECSImageShare(aliyunAccount string, region string, specifiedInstanceId string) {
+	if specifiedInstanceId == "all" {
 		var (
-			selectInstanceIDList []string
-			selectInstanceID     string
+			selectInstanceIdList []string
+			selectInstanceId     string
 			InstancesList        []Instances
 			SN                   int
 		)
-		InstancesList = ReturnCacheInstanceList(specifiedInstanceID, region, "alibaba")
+		InstancesList = ReturnCacheInstanceList(specifiedInstanceId, region, "alibaba")
 		if len(InstancesList) == 0 {
 			log.Warnf("未发现实例，可以使用 --flushCache 刷新缓存后再试 (No instances found, You can use the --flushCache command to flush the cache and try again)")
 			return
 		} else if len(InstancesList) == 1 {
-			specifiedInstanceID = InstancesList[0].InstanceId
+			specifiedInstanceId = InstancesList[0].InstanceId
 			region = InstancesList[0].RegionId
 		} else {
 			for _, i := range InstancesList {
 				SN = SN + 1
-				selectInstanceIDList = append(selectInstanceIDList, fmt.Sprintf("%s %s (%s)", strconv.Itoa(SN), i.InstanceId, i.OSName))
+				selectInstanceIdList = append(selectInstanceIdList, fmt.Sprintf("%s %s (%s)", strconv.Itoa(SN), i.InstanceId, i.OSName))
 			}
-			sort.Strings(selectInstanceIDList)
+			sort.Strings(selectInstanceIdList)
 			prompt := &survey.Select{
 				Message: "选择一个实例 (Choose a instance): ",
-				Options: selectInstanceIDList,
+				Options: selectInstanceIdList,
 			}
-			survey.AskOne(prompt, &selectInstanceID)
+			survey.AskOne(prompt, &selectInstanceId)
 			for _, j := range InstancesList {
-				if selectInstanceID != "all" {
-					if selectInstanceID == fmt.Sprintf("%s (%s)", j.InstanceId, j.OSName) {
+				if selectInstanceId != "all" {
+					if selectInstanceId == fmt.Sprintf("%s (%s)", j.InstanceId, j.OSName) {
 						InstancesList = nil
 						InstancesList = append(InstancesList, j)
 					}
 				}
 			}
 			for _, v := range InstancesList {
-				if strings.Contains(selectInstanceID, v.InstanceId) {
-					specifiedInstanceID = v.InstanceId
+				if strings.Contains(selectInstanceId, v.InstanceId) {
+					specifiedInstanceId = v.InstanceId
 					region = v.RegionId
 				}
 			}
 		}
 	}
-	log.Infoln(fmt.Sprintf("即将为 %s 实例创建镜像 (Preparing to create an image for the instance %s.)", specifiedInstanceID, specifiedInstanceID))
+	log.Infoln(fmt.Sprintf("即将为 %s 实例创建镜像 (Preparing to create an image for the instance %s.)", specifiedInstanceId, specifiedInstanceId))
 	createImageRequest := ecs.CreateCreateImageRequest()
 	createImageRequest.Scheme = "https"
-	createImageRequest.InstanceId = specifiedInstanceID
+	createImageRequest.InstanceId = specifiedInstanceId
 	createImageRequest.QueryParams["Tag.1.value"] = "testMKzrHZyk"
 	createImageRequest.QueryParams["Tag.1.Key"] = "testMKzrHZyk"
 	createImageResponse, err := ECSClient(region).CreateImage(createImageRequest)
@@ -69,7 +69,7 @@ func ECSImageShare(aliyunAccount string, region string, specifiedInstanceID stri
 		return
 	}
 
-	imageId := createImageResponse.ImageId
+	ImageId := createImageResponse.ImageId
 	describeImagesRequest := ecs.CreateDescribeImagesRequest()
 	describeImagesRequest.Scheme = "https"
 	describeImagesRequest.ImageOwnerAlias = "self"
@@ -89,7 +89,7 @@ func ECSImageShare(aliyunAccount string, region string, specifiedInstanceID stri
 
 	modifyImageSharePermissionRequest := ecs.CreateModifyImageSharePermissionRequest()
 	modifyImageSharePermissionRequest.Scheme = "https"
-	modifyImageSharePermissionRequest.ImageId = imageId
+	modifyImageSharePermissionRequest.ImageId = ImageId
 	modifyImageSharePermissionRequest.QueryParams["AddAccount.1"] = aliyunAccount
 	_, err = ECSClient(region).ModifyImageSharePermission(modifyImageSharePermissionRequest)
 	var status string
@@ -107,11 +107,11 @@ func ECSImageShare(aliyunAccount string, region string, specifiedInstanceID stri
 	}
 	var ImageShareCache pubutil.ImageShareCache
 	ImageShareCache.AccessKeyId = cmdutil.GetConfig("alibaba").AccessKeyId
-	ImageShareCache.ImageID = imageId
-	ImageShareCache.InstanceID = specifiedInstanceID
+	ImageShareCache.ImageId = ImageId
+	ImageShareCache.InstanceId = specifiedInstanceId
 	ImageShareCache.Provider = "alibaba"
 	ImageShareCache.Region = region
-	ImageShareCache.ShareAccountID = aliyunAccount
+	ImageShareCache.ShareAccountId = aliyunAccount
 	ImageShareCache.Status = status
 	ImageShareCache.Time = pubutil.CurrentTime()
 	database.InsertImageShareCache(ImageShareCache)
@@ -126,7 +126,7 @@ func GetImageShare() {
 	ImageShareCache = database.SelectImageShareCache("alibaba")
 	for _, v := range ImageShareCache {
 		SN = SN + 1
-		dataSingle := []string{strconv.Itoa(SN), v.InstanceID, v.ImageID, v.ShareAccountID, v.Status, v.Region, v.Time}
+		dataSingle := []string{strconv.Itoa(SN), v.InstanceId, v.ImageId, v.ShareAccountId, v.Status, v.Region, v.Time}
 		data = append(data, dataSingle)
 	}
 	header = []string{"序号 (SN)", "实例 ID (Instance ID)", "镜像 ID (Image Name)", "共享帐号 ID (Share Account ID)", "状态 (Status)", "区域 ID (Region ID)", "时间 (Time)"}
@@ -136,52 +136,52 @@ func GetImageShare() {
 func ImageDelete() {
 	var (
 		aliyunAccount       string
-		imageId             string
+		ImageId             string
 		ImageShareCache     []pubutil.ImageShareCache
 		region              string
-		specifiedInstanceID string
+		specifiedInstanceId string
 	)
 	ImageShareCache = database.SelectImageShareCache("alibaba")
 	if len(ImageShareCache) == 0 {
-		log.Infoln("未找到共享镜像信息，无需删除 (Shared image information not found, no need for deletion.)")
+		log.Warnln("未找到共享镜像信息，无需删除 (Shared image information not found, no need for deletion.)")
 		return
 	} else if len(ImageShareCache) == 1 {
-		aliyunAccount = ImageShareCache[0].ShareAccountID
-		imageId = ImageShareCache[0].ImageID
+		aliyunAccount = ImageShareCache[0].ShareAccountId
+		ImageId = ImageShareCache[0].ImageId
 		region = ImageShareCache[0].Region
-		specifiedInstanceID = ImageShareCache[0].InstanceID
+		specifiedInstanceId = ImageShareCache[0].InstanceId
 	} else {
 		var (
-			selectImageIDList []string
-			selectImageID     string
+			selectImageIdList []string
+			selectImageId     string
 			SN                int
 		)
 
 		for _, i := range ImageShareCache {
 			SN = SN + 1
-			selectImageIDList = append(selectImageIDList, fmt.Sprintf("%s-%s-%s-%s)", strconv.Itoa(SN), i.InstanceID, i.ImageID, i.Region))
+			selectImageIdList = append(selectImageIdList, fmt.Sprintf("%s-%s-%s-%s)", strconv.Itoa(SN), i.InstanceId, i.ImageId, i.Region))
 		}
-		sort.Strings(selectImageIDList)
+		sort.Strings(selectImageIdList)
 		prompt := &survey.Select{
 			Message: "选择一个镜像 (Choose a image): ",
-			Options: selectImageIDList,
+			Options: selectImageIdList,
 		}
-		survey.AskOne(prompt, &selectImageID)
+		survey.AskOne(prompt, &selectImageId)
 		for _, v := range ImageShareCache {
-			if strings.Contains(selectImageID, v.ImageID) {
-				aliyunAccount = v.ShareAccountID
-				imageId = v.ImageID
+			if strings.Contains(selectImageId, v.ImageId) {
+				aliyunAccount = v.ShareAccountId
+				ImageId = v.ImageId
 				region = v.Region
-				specifiedInstanceID = v.InstanceID
+				specifiedInstanceId = v.InstanceId
 			}
 		}
 	}
 
-	log.Debugln(fmt.Sprintf("已选择实例 ID 为 %s，镜像 ID 为 %s，共享帐号为 %s，区域为 %s (Instance ID selected: %s, Image ID: %s, Shared account: %s, Region: %s.)", specifiedInstanceID, imageId, aliyunAccount, region))
+	log.Debugln(fmt.Sprintf("已选择实例 ID 为 %s，镜像 ID 为 %s，共享帐号为 %s，区域为 %s (Instance ID selected: %s, Image ID: %s, Shared account: %s, Region: %s.)", specifiedInstanceId, ImageId, aliyunAccount, region))
 
 	var isSure bool
 	prompt := &survey.Confirm{
-		Message: fmt.Sprintf("确定取消共享并删除 %s 实例下的 %s 镜像与快照吗？(Are you sure you want to cancel the %s sharing and delete the image and snapshot under the %s instance?)", specifiedInstanceID, imageId, imageId, specifiedInstanceID),
+		Message: fmt.Sprintf("确定取消共享并删除 %s 实例下的 %s 镜像与快照吗？(Are you sure you want to cancel the %s sharing and delete the image and snapshot under the %s instance?)", specifiedInstanceId, ImageId, ImageId, specifiedInstanceId),
 		Default: true,
 	}
 	err := survey.AskOne(prompt, &isSure)
@@ -194,19 +194,19 @@ func ImageDelete() {
 	// 删除镜像
 	modifyImageSharePermissionRequest := ecs.CreateModifyImageSharePermissionRequest()
 	modifyImageSharePermissionRequest.Scheme = "https"
-	modifyImageSharePermissionRequest.ImageId = imageId
+	modifyImageSharePermissionRequest.ImageId = ImageId
 
 	modifyImageSharePermissionRequest.QueryParams["RemoveAccount.1"] = aliyunAccount
 	ECSClient(region).ModifyImageSharePermission(modifyImageSharePermissionRequest)
 
 	deleteImageRequest := ecs.CreateDeleteImageRequest()
-	deleteImageRequest.ImageId = imageId
+	deleteImageRequest.ImageId = ImageId
 	deleteImageRequest.QueryParams["Force"] = "true"
 	ECSClient(region).DeleteImage(deleteImageRequest)
 
 	// 删除快照
 	describeSnapshotsRequest := ecs.CreateDescribeSnapshotsRequest()
-	describeSnapshotsRequest.InstanceId = specifiedInstanceID
+	describeSnapshotsRequest.InstanceId = specifiedInstanceId
 	describeSnapshotsRequest.SnapshotType = "user"
 	describeSnapshotsRequest.QueryParams["output"] = "cols=SnapshotName,SnapshotId,LastModifiedTime rows=Snapshots.Snapshot[]"
 	describeSnapshotsResponse, err := ECSClient(region).DescribeSnapshots(describeSnapshotsRequest)
@@ -230,6 +230,6 @@ func ImageDelete() {
 	ECSClient(region).DeleteSnapshot(deleteSnapshotRequest)
 
 	// 删除本地缓存信息
-	database.DeleteImageShareCache(imageId)
+	database.DeleteImageShareCache(ImageId)
 	log.Infoln("已取消共享并已删除镜像与快照 (Sharing has been canceled, and the image and snapshot have been deleted.)")
 }

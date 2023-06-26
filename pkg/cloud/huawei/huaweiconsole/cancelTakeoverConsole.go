@@ -22,7 +22,7 @@ func CancelTakeoverConsole() {
 	if len(TakeoverConsoleCache) == 0 {
 		log.Infoln("未接管过控制台，无需取消 (No takeover of the console, no need to cancel)")
 	} else {
-		userId := TakeoverConsoleCache[0].PrimaryAccountID
+		userId := TakeoverConsoleCache[0].PrimaryAccountId
 		userName := TakeoverConsoleCache[0].UserName
 		DeleteUser(userId, userName)
 		database.DeleteTakeoverConsoleCache("huawei")

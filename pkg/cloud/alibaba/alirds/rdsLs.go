@@ -30,7 +30,7 @@ type DBInstances struct {
 	RegionId         string
 }
 
-func DescribeDBInstances(region string, running bool, specifiedDBInstanceID string, engine string, NextToken string, output bool) ([]DBInstances, error) {
+func DescribeDBInstances(region string, running bool, specifiedDBInstanceId string, engine string, NextToken string, output bool) ([]DBInstances, error) {
 	if !in(region, TraversedRegions) {
 		TraversedRegions = append(TraversedRegions, region)
 	}
@@ -43,8 +43,8 @@ func DescribeDBInstances(region string, running bool, specifiedDBInstanceID stri
 	if running == true {
 		request.DBInstanceStatus = "Running"
 	}
-	if specifiedDBInstanceID != "all" {
-		request.DBInstanceId = specifiedDBInstanceID
+	if specifiedDBInstanceId != "all" {
+		request.DBInstanceId = specifiedDBInstanceId
 	}
 	if engine != "all" {
 		request.Engine = engine
@@ -73,12 +73,12 @@ func DescribeDBInstances(region string, running bool, specifiedDBInstanceID stri
 	NextToken = response.NextToken
 	if NextToken != "" && !in(region, TraversedRegions) {
 		log.Tracef("Next Token: %s", NextToken)
-		_, _ = DescribeDBInstances(region, running, specifiedDBInstanceID, engine, NextToken, true)
+		_, _ = DescribeDBInstances(region, running, specifiedDBInstanceId, engine, NextToken, true)
 	}
 	return DescribeDBInstancesOut, err
 }
 
-func ReturnDBInstancesList(region string, running bool, specifiedDBInstanceID string, engine string) []DBInstances {
+func ReturnDBInstancesList(region string, running bool, specifiedDBInstanceId string, engine string) []DBInstances {
 	var DBInstancesList []DBInstances
 	var DBInstance []DBInstances
 	if region == "all" {
@@ -88,14 +88,14 @@ func ReturnDBInstancesList(region string, running bool, specifiedDBInstanceID st
 		}
 		RegionsList = RemoveRepeatedElement(RegionsList)
 		for _, j := range RegionsList {
-			DBInstance, _ = DescribeDBInstances(j, running, specifiedDBInstanceID, engine, "", true)
+			DBInstance, _ = DescribeDBInstances(j, running, specifiedDBInstanceId, engine, "", true)
 			DescribeDBInstancesOut = nil
 			for _, i := range DBInstance {
 				DBInstancesList = append(DBInstancesList, i)
 			}
 		}
 	} else {
-		DBInstancesList, _ = DescribeDBInstances(region, running, specifiedDBInstanceID, engine, "", true)
+		DBInstancesList, _ = DescribeDBInstances(region, running, specifiedDBInstanceId, engine, "", true)
 	}
 	return DBInstancesList
 }
@@ -117,8 +117,8 @@ func RemoveRepeatedElement(arr []string) (newArr []string) {
 	return newArr
 }
 
-func PrintDBInstancesListRealTime(region string, running bool, specifiedDBInstanceID string, engine string) {
-	DBInstancesList := ReturnDBInstancesList(region, running, specifiedDBInstanceID, engine)
+func PrintDBInstancesListRealTime(region string, running bool, specifiedDBInstanceId string, engine string) {
+	DBInstancesList := ReturnDBInstancesList(region, running, specifiedDBInstanceId, engine)
 	var data = make([][]string, len(DBInstancesList))
 	for i, o := range DBInstancesList {
 		SN := strconv.Itoa(i + 1)
@@ -132,14 +132,14 @@ func PrintDBInstancesListRealTime(region string, running bool, specifiedDBInstan
 		cloud.PrintTable(td, Caption)
 		util.WriteTimestamp(TimestampType)
 	}
-	cmdutil.WriteCacheFile(td, "alibaba", "rds", region, specifiedDBInstanceID)
+	cmdutil.WriteCacheFile(td, "alibaba", "rds", region, specifiedDBInstanceId)
 }
 
-func PrintDBInstancesListHistory(region string, running bool, specifiedDBInstanceID string, engine string) {
-	cmdutil.PrintRDSCacheFile(header, region, specifiedDBInstanceID, engine, "alibaba", "RDS")
+func PrintDBInstancesListHistory(region string, running bool, specifiedDBInstanceId string, engine string) {
+	cmdutil.PrintRDSCacheFile(header, region, specifiedDBInstanceId, engine, "alibaba", "RDS")
 }
 
-func PrintDBInstancesList(region string, running bool, specifiedDBInstanceID string, engine string, lsFlushCache bool, all bool) {
+func PrintDBInstancesList(region string, running bool, specifiedDBInstanceId string, engine string, lsFlushCache bool, all bool) {
 	if all {
 		DBInstancesList := ReturnDBInstancesList("all", false, "all", "all")
 		if len(DBInstancesList) == 0 {
@@ -260,16 +260,16 @@ func PrintDBInstancesList(region string, running bool, specifiedDBInstanceID str
 		}
 	} else {
 		if lsFlushCache {
-			PrintDBInstancesListRealTime(region, running, specifiedDBInstanceID, engine)
+			PrintDBInstancesListRealTime(region, running, specifiedDBInstanceId, engine)
 		} else {
 			oldTimestamp := util.ReadTimestamp(TimestampType)
 			if oldTimestamp == 0 {
-				PrintDBInstancesListRealTime(region, running, specifiedDBInstanceID, engine)
+				PrintDBInstancesListRealTime(region, running, specifiedDBInstanceId, engine)
 			} else if util.IsFlushCache(oldTimestamp) {
-				PrintDBInstancesListRealTime(region, running, specifiedDBInstanceID, engine)
+				PrintDBInstancesListRealTime(region, running, specifiedDBInstanceId, engine)
 			} else {
 				util.TimeDifference(oldTimestamp)
-				PrintDBInstancesListHistory(region, running, specifiedDBInstanceID, engine)
+				PrintDBInstancesListHistory(region, running, specifiedDBInstanceId, engine)
 			}
 		}
 	}
@@ -284,38 +284,38 @@ func in(target string, str_array []string) bool {
 	return false
 }
 
-func GetNetInfo(region string, specifiedDBInstanceID string) []rds.DBInstanceNetInfo {
+func GetNetInfo(region string, specifiedDBInstanceId string) []rds.DBInstanceNetInfo {
 	request := rds.CreateDescribeDBInstanceNetInfoRequest()
 	request.Scheme = "https"
-	request.DBInstanceId = specifiedDBInstanceID
+	request.DBInstanceId = specifiedDBInstanceId
 	request.QueryParams["output"] = "cols=IPAddress,ConnectionString,IPType,Port rows=DBInstanceNetInfos.DBInstanceNetInfo[]"
 	response, err := RDSClient(region).DescribeDBInstanceNetInfo(request)
 	errutil.HandleErrNoExit(err)
 	return response.DBInstanceNetInfos.DBInstanceNetInfo
 }
 
-func GetWhiteListInfo(region string, specifiedDBInstanceID string) []rds.DBInstanceIPArray {
+func GetWhiteListInfo(region string, specifiedDBInstanceId string) []rds.DBInstanceIPArray {
 	request := rds.CreateDescribeDBInstanceIPArrayListRequest()
 	request.Scheme = "https"
-	request.DBInstanceId = specifiedDBInstanceID
+	request.DBInstanceId = specifiedDBInstanceId
 	response, err := RDSClient(region).DescribeDBInstanceIPArrayList(request)
 	errutil.HandleErrNoExit(err)
 	return response.Items.DBInstanceIPArray
 }
 
-func GetAccountInfo(region string, specifiedDBInstanceID string) []rds.DBInstanceAccount {
+func GetAccountInfo(region string, specifiedDBInstanceId string) []rds.DBInstanceAccount {
 	request := rds.CreateDescribeAccountsRequest()
 	request.Scheme = "https"
-	request.DBInstanceId = specifiedDBInstanceID
+	request.DBInstanceId = specifiedDBInstanceId
 	response, err := RDSClient(region).DescribeAccounts(request)
 	errutil.HandleErrNoExit(err)
 	return response.Accounts.DBInstanceAccount
 }
 
-func GetDataBases(region string, specifiedDBInstanceID string) []rds.Database {
+func GetDataBases(region string, specifiedDBInstanceId string) []rds.Database {
 	request := rds.CreateDescribeDatabasesRequest()
 	request.Scheme = "https"
-	request.DBInstanceId = specifiedDBInstanceID
+	request.DBInstanceId = specifiedDBInstanceId
 	request.QueryParams["output"] = "cols=DBName,DBStatus,Engine rows=Databases.Database[]"
 	response, err := RDSClient(region).DescribeDatabases(request)
 	errutil.HandleErrNoExit(err)

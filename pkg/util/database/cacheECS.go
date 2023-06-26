@@ -21,26 +21,26 @@ func SelectECSCache(provider string) []pubutil.ECSCache {
 	return ECSCache
 }
 
-func SelectEcsCacheFilter(provider string, region string, specifiedInstanceID string, running bool) []pubutil.ECSCache {
+func SelectEcsCacheFilter(provider string, region string, specifiedInstanceId string, running bool) []pubutil.ECSCache {
 	var ECSCache []pubutil.ECSCache
 	AccessKeyId := SelectConfigInUse(provider).AccessKeyId
 	switch {
-	case region == "all" && specifiedInstanceID == "all" && running == false:
+	case region == "all" && specifiedInstanceId == "all" && running == false:
 		CacheDb.Where("access_key_id = ? COLLATE NOCASE", AccessKeyId).Find(&ECSCache)
-	case region == "all" && specifiedInstanceID == "all" && running == true:
+	case region == "all" && specifiedInstanceId == "all" && running == true:
 		CacheDb.Where("access_key_id = ? AND status = ? COLLATE NOCASE", AccessKeyId, "Running").Find(&ECSCache)
-	case region == "all" && specifiedInstanceID != "all" && running == false:
-		CacheDb.Where("access_key_id = ? AND instance_id = ? COLLATE NOCASE", AccessKeyId, specifiedInstanceID).Find(&ECSCache)
-	case region == "all" && specifiedInstanceID != "all" && running == true:
-		CacheDb.Where("access_key_id = ? AND instance_id = ? COLLATE NOCASE AND status = ? COLLATE NOCASE", AccessKeyId, specifiedInstanceID, "Running").Find(&ECSCache)
-	case region != "all" && specifiedInstanceID == "all" && running == false:
+	case region == "all" && specifiedInstanceId != "all" && running == false:
+		CacheDb.Where("access_key_id = ? AND instance_id = ? COLLATE NOCASE", AccessKeyId, specifiedInstanceId).Find(&ECSCache)
+	case region == "all" && specifiedInstanceId != "all" && running == true:
+		CacheDb.Where("access_key_id = ? AND instance_id = ? COLLATE NOCASE AND status = ? COLLATE NOCASE", AccessKeyId, specifiedInstanceId, "Running").Find(&ECSCache)
+	case region != "all" && specifiedInstanceId == "all" && running == false:
 		CacheDb.Where("access_key_id = ? AND region_id = ? COLLATE NOCASE", AccessKeyId, region).Find(&ECSCache)
-	case region != "all" && specifiedInstanceID == "all" && running == true:
+	case region != "all" && specifiedInstanceId == "all" && running == true:
 		CacheDb.Where("access_key_id = ? AND status = ? COLLATE NOCASE AND region_id = ? COLLATE NOCASE", AccessKeyId, "Running", region).Find(&ECSCache)
-	case region != "all" && specifiedInstanceID != "all" && running == false:
-		CacheDb.Where("access_key_id = ? AND instance_id = ? COLLATE NOCASE AND region_id = ? COLLATE NOCASE", AccessKeyId, specifiedInstanceID, region).Find(&ECSCache)
-	case region != "all" && specifiedInstanceID != "all" && running == true:
-		CacheDb.Where("access_key_id = ? AND instance_id = ? COLLATE NOCASE AND status = ? COLLATE NOCASE AND region_id = ? COLLATE NOCASE", AccessKeyId, specifiedInstanceID, "Running", region).Find(&ECSCache)
+	case region != "all" && specifiedInstanceId != "all" && running == false:
+		CacheDb.Where("access_key_id = ? AND instance_id = ? COLLATE NOCASE AND region_id = ? COLLATE NOCASE", AccessKeyId, specifiedInstanceId, region).Find(&ECSCache)
+	case region != "all" && specifiedInstanceId != "all" && running == true:
+		CacheDb.Where("access_key_id = ? AND instance_id = ? COLLATE NOCASE AND status = ? COLLATE NOCASE AND region_id = ? COLLATE NOCASE", AccessKeyId, specifiedInstanceId, "Running", region).Find(&ECSCache)
 	}
 	return ECSCache
 }

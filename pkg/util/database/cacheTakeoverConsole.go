@@ -5,7 +5,7 @@ import (
 	"time"
 )
 
-func InsertTakeoverConsoleCache(provider string, primaryAccountID string, userName string, password string, loginURL string, consoleAccessKeyId string, consoleAccessKeySecret string) {
+func InsertTakeoverConsoleCache(provider string, primaryAccountId string, userName string, password string, loginURL string, consoleAccessKeyId string, consoleAccessKeySecret string) {
 	var TakeoverConsoleCache []pubutil.TakeoverConsoleCache
 	DeleteTakeoverConsoleCache(provider)
 	config := SelectConfigInUse(provider)
@@ -14,7 +14,7 @@ func InsertTakeoverConsoleCache(provider string, primaryAccountID string, userNa
 	TakeoverConsoleCache = append(TakeoverConsoleCache, pubutil.TakeoverConsoleCache{
 		Provider:               provider,
 		AccessKeyId:            accessKeyId,
-		PrimaryAccountID:       primaryAccountID,
+		PrimaryAccountId:       primaryAccountId,
 		UserName:               userName,
 		Password:               password,
 		LoginUrl:               loginURL,

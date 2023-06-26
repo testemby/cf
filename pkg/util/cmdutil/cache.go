@@ -121,9 +121,9 @@ func PrintOSSCacheFile(header []string, region string, provider string, resource
 	PrintTable(data, header, resourceType)
 }
 
-func PrintECSCacheFile(header []string, region string, specifiedInstanceID string, provider string, resourceType string, running bool) {
+func PrintECSCacheFile(header []string, region string, specifiedInstanceId string, provider string, resourceType string, running bool) {
 	var data [][]string
-	ECSCache := database.SelectEcsCacheFilter(provider, region, specifiedInstanceID, running)
+	ECSCache := database.SelectEcsCacheFilter(provider, region, specifiedInstanceId, running)
 	for _, v := range ECSCache {
 		dataSingle := []string{v.SN, v.InstanceId, v.InstanceName, v.OSName, v.OSType, v.Status, v.PrivateIpAddress, v.PublicIpAddress, v.RegionId}
 		data = append(data, dataSingle)
@@ -131,9 +131,9 @@ func PrintECSCacheFile(header []string, region string, specifiedInstanceID strin
 	PrintTable(data, header, resourceType)
 }
 
-func PrintRDSCacheFile(header []string, region string, specifiedDBInstanceID string, engine string, provider string, resourceType string) {
+func PrintRDSCacheFile(header []string, region string, specifiedDBInstanceId string, engine string, provider string, resourceType string) {
 	var data [][]string
-	RDSCache := database.SelectRDSCacheFilter(provider, region, specifiedDBInstanceID, engine)
+	RDSCache := database.SelectRDSCacheFilter(provider, region, specifiedDBInstanceId, engine)
 	for _, v := range RDSCache {
 		dataSingle := []string{v.SN, v.DBInstanceId, v.Engine, v.EngineVersion, v.DBInstanceStatus, v.RegionId}
 		data = append(data, dataSingle)

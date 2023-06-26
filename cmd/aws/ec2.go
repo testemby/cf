@@ -20,8 +20,8 @@ var (
 	//commandFile                string
 	ec2LsRegion string
 	//ec2ExecRegion              string
-	ec2LsSpecifiedInstanceID string
-	//ec2Exec2pecifiedInstanceID string
+	ec2LsSpecifiedInstanceId string
+	//ec2Exec2pecifiedInstanceId string
 )
 
 func init() {
@@ -31,7 +31,7 @@ func init() {
 	ec2Cmd.PersistentFlags().BoolVar(&ec2FlushCache, "flushCache", false, "刷新缓存，不使用缓存数据 (Refresh the cache without using cached data)")
 
 	ec2LsCmd.Flags().StringVarP(&ec2LsRegion, "region", "r", "all", "指定区域 ID (Specify region ID)")
-	ec2LsCmd.Flags().StringVarP(&ec2LsSpecifiedInstanceID, "instanceID", "i", "all", "指定实例 ID (Specify instance ID)")
+	ec2LsCmd.Flags().StringVarP(&ec2LsSpecifiedInstanceId, "InstanceId", "i", "all", "指定实例 ID (Specify instance ID)")
 }
 
 var ec2Cmd = &cobra.Command{
@@ -45,6 +45,6 @@ var ec2LsCmd = &cobra.Command{
 	Short: "列出所有的实例 (List all instances)",
 	Long:  "列出所有的实例 (List all instances)",
 	Run: func(cmd *cobra.Command, args []string) {
-		awsec2.PrintInstancesList(ec2LsRegion, false, ec2LsSpecifiedInstanceID, ec2FlushCache, false)
+		awsec2.PrintInstancesList(ec2LsRegion, false, ec2LsSpecifiedInstanceId, ec2FlushCache, false)
 	},
 }

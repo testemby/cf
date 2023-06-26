@@ -63,12 +63,12 @@ func DeleteCommand(region string, CommandId string) {
 	log.Debugln("删除 CommandId (Delete CommandId): " + CommandId)
 }
 
-func InvokeCommand(region string, OSType string, command string, scriptType string, specifiedInstanceID string) (string, string) {
+func InvokeCommand(region string, OSType string, command string, scriptType string, specifiedInstanceId string) (string, string) {
 	CommandId := CreateCommand(region, OSType, command, scriptType)
 	request := tat.NewInvokeCommandRequest()
 	request.SetScheme("https")
 	request.CommandId = &CommandId
-	request.InstanceIds = common.StringPtrs([]string{specifiedInstanceID})
+	request.InstanceIds = common.StringPtrs([]string{specifiedInstanceId})
 	response, err := TATClient(region).InvokeCommand(request)
 	errutil.HandleErr(err)
 	InvokeId := *response.Response.InvocationId
@@ -104,13 +104,13 @@ func DescribeInvocationResults(region string, CommandId string, InvokeId string,
 	return output
 }
 
-func LhExec(command string, commandFile string, scriptType string, specifiedInstanceID string, region string, batchCommand bool, userData bool, metaDataSTSToken bool, lhFlushCache bool, lhost string, lport string, timeOut int) {
+func LhExec(command string, commandFile string, scriptType string, specifiedInstanceId string, region string, batchCommand bool, userData bool, metaDataSTSToken bool, lhFlushCache bool, lhost string, lport string, timeOut int) {
 	var InstancesList []Instances
 	if lhFlushCache == false {
 		data := cmdutil.ReadECSCache("tencent")
 		for _, v := range data {
-			if specifiedInstanceID != "all" {
-				if specifiedInstanceID == v.InstanceId {
+			if specifiedInstanceId != "all" {
+				if specifiedInstanceId == v.InstanceId {
 					obj := Instances{
 						InstanceId:       v.InstanceId,
 						InstanceName:     v.InstanceName,
@@ -138,33 +138,33 @@ func LhExec(command string, commandFile string, scriptType string, specifiedInst
 			}
 		}
 	} else {
-		InstancesList = ReturnInstancesList(region, false, specifiedInstanceID)
+		InstancesList = ReturnInstancesList(region, false, specifiedInstanceId)
 	}
 	if len(InstancesList) == 0 {
-		if specifiedInstanceID == "all" {
+		if specifiedInstanceId == "all" {
 			log.Warnf("未发现实例，可以使用 --flushCache 刷新缓存后再试 (No instances found, You can use the --flushCache command to flush the cache and try again)")
 		} else {
-			log.Warnf("未找到 %s 实例的相关信息 (No information found about the %s instance)", specifiedInstanceID, specifiedInstanceID)
+			log.Warnf("未找到 %s 实例的相关信息 (No information found about the %s instance)", specifiedInstanceId, specifiedInstanceId)
 		}
 	} else {
-		if specifiedInstanceID == "all" {
+		if specifiedInstanceId == "all" {
 			var (
-				selectInstanceIDList []string
-				selectInstanceID     string
+				selectInstanceIdList []string
+				selectInstanceId     string
 			)
-			selectInstanceIDList = append(selectInstanceIDList, "全部实例 (all instances)")
+			selectInstanceIdList = append(selectInstanceIdList, "全部实例 (all instances)")
 			for _, i := range InstancesList {
-				selectInstanceIDList = append(selectInstanceIDList, fmt.Sprintf("%s (%s)", i.InstanceId, i.OSName))
+				selectInstanceIdList = append(selectInstanceIdList, fmt.Sprintf("%s (%s)", i.InstanceId, i.OSName))
 			}
-			sort.Strings(selectInstanceIDList)
+			sort.Strings(selectInstanceIdList)
 			prompt := &survey.Select{
 				Message: "选择一个实例 (Choose a instance): ",
-				Options: selectInstanceIDList,
+				Options: selectInstanceIdList,
 			}
-			survey.AskOne(prompt, &selectInstanceID)
+			survey.AskOne(prompt, &selectInstanceId)
 			for _, j := range InstancesList {
-				if selectInstanceID != "all" {
-					if selectInstanceID == fmt.Sprintf("%s (%s)", j.InstanceId, j.OSName) {
+				if selectInstanceId != "all" {
+					if selectInstanceId == fmt.Sprintf("%s (%s)", j.InstanceId, j.OSName) {
 						InstancesList = nil
 						InstancesList = append(InstancesList, j)
 					}
@@ -175,9 +175,9 @@ func LhExec(command string, commandFile string, scriptType string, specifiedInst
 			regions := strings.Split(i.RegionId, "-")
 			region = regions[0] + "-" + regions[1]
 			OSType := i.OSType
-			specifiedInstanceID := i.InstanceId
+			specifiedInstanceId := i.InstanceId
 			if userData == true {
-				commandResult := getUserData(region, OSType, scriptType, specifiedInstanceID, timeOut)
+				commandResult := getUserData(region, OSType, scriptType, specifiedInstanceId, timeOut)
 				if commandResult == "" {
 					fmt.Println("未找到用户数据 (User data not found)")
 				} else if commandResult == "disabled" {
@@ -186,7 +186,7 @@ func LhExec(command string, commandFile string, scriptType string, specifiedInst
 					fmt.Println(commandResult)
 				}
 			} else if metaDataSTSToken == true {
-				commandResult := getMetaDataSTSToken(region, OSType, scriptType, specifiedInstanceID, timeOut)
+				commandResult := getMetaDataSTSToken(region, OSType, scriptType, specifiedInstanceId, timeOut)
 				if commandResult == "" {
 					fmt.Println("未找到临时访问密钥 (STS Token not found)")
 				} else if commandResult == "disabled" {
@@ -217,16 +217,16 @@ func LhExec(command string, commandFile string, scriptType string, specifiedInst
 					content := string(contentByte)
 					command = content[:len(content)-1]
 				}
-				color.Printf("\n<lightGreen>%s ></> %s\n\n", specifiedInstanceID, command)
-				commandResult := getExecResult(region, command, OSType, scriptType, specifiedInstanceID, timeOut)
+				color.Printf("\n<lightGreen>%s ></> %s\n\n", specifiedInstanceId, command)
+				commandResult := getExecResult(region, command, OSType, scriptType, specifiedInstanceId, timeOut)
 				fmt.Println(commandResult)
 			}
 		}
 	}
 }
 
-func getExecResult(region string, command string, OSType string, scriptType string, specifiedInstanceID string, timeOut int) string {
-	CommandId, InvokeId := InvokeCommand(region, OSType, command, scriptType, specifiedInstanceID)
+func getExecResult(region string, command string, OSType string, scriptType string, specifiedInstanceId string, timeOut int) string {
+	CommandId, InvokeId := InvokeCommand(region, OSType, command, scriptType, specifiedInstanceId)
 	output := DescribeInvocationResults(region, CommandId, InvokeId, timeOut)
 	var commandResult string
 	if output == "DQo=" {
@@ -239,7 +239,7 @@ func getExecResult(region string, command string, OSType string, scriptType stri
 	return commandResult
 }
 
-func getUserData(region string, OSType string, scriptType string, specifiedInstanceID string, timeOut int) string {
+func getUserData(region string, OSType string, scriptType string, specifiedInstanceId string, timeOut int) string {
 	var command string
 	if OSType == "linux" {
 		command = "curl -s http://metadata.tencentyun.com/latest/user-data/"
@@ -247,17 +247,17 @@ func getUserData(region string, OSType string, scriptType string, specifiedInsta
 		command = "Invoke-RestMethod http://metadata.tencentyun.com/latest/user-data/"
 		scriptType = "ps"
 	}
-	commandResult := getExecResult(region, command, OSType, scriptType, specifiedInstanceID, timeOut)
+	commandResult := getExecResult(region, command, OSType, scriptType, specifiedInstanceId, timeOut)
 	if strings.Contains(commandResult, "404 - Not Found") {
-		color.Printf("\n<lightGreen>%s ></> %s\n\n", specifiedInstanceID, command)
+		color.Printf("\n<lightGreen>%s ></> %s\n\n", specifiedInstanceId, command)
 		commandResult = ""
 	} else {
-		color.Printf("\n<lightGreen>%s ></> %s\n\n", specifiedInstanceID, command)
+		color.Printf("\n<lightGreen>%s ></> %s\n\n", specifiedInstanceId, command)
 	}
 	return commandResult
 }
 
-func getMetaDataSTSToken(region string, OSType string, scriptType string, specifiedInstanceID string, timeOut int) string {
+func getMetaDataSTSToken(region string, OSType string, scriptType string, specifiedInstanceId string, timeOut int) string {
 	var command string
 	var commandResult string
 	if OSType == "linux" {
@@ -266,9 +266,9 @@ func getMetaDataSTSToken(region string, OSType string, scriptType string, specif
 		command = "Invoke-RestMethod http://metadata.tencentyun.com/latest/meta-data/cam/security-credentials/"
 		scriptType = "ps"
 	}
-	roleName := getExecResult(region, command, OSType, scriptType, specifiedInstanceID, timeOut)
+	roleName := getExecResult(region, command, OSType, scriptType, specifiedInstanceId, timeOut)
 	if strings.Contains(roleName, "404 - Not Found") {
-		color.Printf("\n<lightGreen>%s ></> %s\n\n", specifiedInstanceID, command)
+		color.Printf("\n<lightGreen>%s ></> %s\n\n", specifiedInstanceId, command)
 		commandResult = ""
 	} else {
 		if OSType == "linux" {
@@ -277,8 +277,8 @@ func getMetaDataSTSToken(region string, OSType string, scriptType string, specif
 			command = "Invoke-RestMethod http://metadata.tencentyun.com/latest/meta-data/cam/security-credentials/" + roleName
 			scriptType = "ps"
 		}
-		color.Printf("\n<lightGreen>%s ></> %s\n\n", specifiedInstanceID, command)
-		commandResult = getExecResult(region, command, OSType, scriptType, specifiedInstanceID, timeOut)
+		color.Printf("\n<lightGreen>%s ></> %s\n\n", specifiedInstanceId, command)
+		commandResult = getExecResult(region, command, OSType, scriptType, specifiedInstanceId, timeOut)
 	}
 	return commandResult
 }
