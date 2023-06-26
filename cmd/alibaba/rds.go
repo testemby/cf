@@ -21,9 +21,12 @@ var (
 	rdsConnect         string
 	rdsWhiteList       string
 
-	// rdsAccountAdd
+	// rdsAccount
 	rdsAccountSpecifiedDBInstanceId string
 	rdsAccountUserName              string
+
+	// rdsPublic
+	rdsPublicSpecifiedDBInstanceId string
 )
 
 func init() {
@@ -31,8 +34,11 @@ func init() {
 	rdsCmd.AddCommand(rdsLsCmd)
 	rdsCmd.AddCommand(rdsExecCmd)
 	rdsCmd.AddCommand(rdsAccountCmd)
+	rdsCmd.AddCommand(rdsPublicCmd)
 	rdsAccountCmd.AddCommand(rdsAccountDelCmd)
 	rdsAccountCmd.AddCommand(rdsAccountLsCmd)
+	rdsPublicCmd.AddCommand(rdsPublicLsCmd)
+	rdsPublicCmd.AddCommand(rdsPublicCancelCmd)
 
 	// rdsCmd
 	rdsCmd.PersistentFlags().BoolVar(&rdsLsFlushCache, "flushCache", false, "刷新缓存，不使用缓存数据 (Refresh the cache without using cached data)")
@@ -52,6 +58,9 @@ func init() {
 	// rdsAccount
 	rdsAccountCmd.Flags().StringVarP(&rdsAccountSpecifiedDBInstanceId, "DBInstanceId", "i", "all", "指定 RDS 实例 ID (Specify the RDS instance ID)")
 	rdsAccountCmd.Flags().StringVarP(&rdsAccountUserName, "userName", "u", "crossfire", "指定用户名 (Specify user name)")
+
+	// rdsPublic
+	rdsPublicCmd.Flags().StringVarP(&rdsPublicSpecifiedDBInstanceId, "DBInstanceId", "i", "all", "指定 RDS 实例 ID (Specify the RDS instance ID)")
 }
 
 var rdsCmd = &cobra.Command{
@@ -69,6 +78,7 @@ var rdsLsCmd = &cobra.Command{
 	},
 }
 
+// RDS Account 相关操作
 var rdsAccountCmd = &cobra.Command{
 	Use:   "account",
 	Short: "添加云数据库帐号 (Add RDS account)",
@@ -96,10 +106,38 @@ var rdsAccountDelCmd = &cobra.Command{
 	},
 }
 
-var rdsExecCmd = &cobra.Command{
-	Use:   "exec",
-	Short: "执行与rds相关的操作 (Perform rds-related operations)",
-	Long:  "执行与rds相关的操作 (Perform rds-related operations)",
+// RDS Public Access 相关操作
+var rdsPublicCmd = &cobra.Command{
+	Use:   "public",
+	Short: "将云数据库设置为公开访问 (Set RDS to be publicly accessible)",
+	Long:  "将云数据库设置为公开访问 (Set RDS to be publicly accessible)",
+	Run: func(cmd *cobra.Command, args []string) {
+		alirds.RdsPublic(rdsPublicSpecifiedDBInstanceId)
+	},
+}
+
+var rdsPublicLsCmd = &cobra.Command{
+	Use:   "ls",
+	Short: "列出已经设置过的公开访问地址 (List the public access addresses that have been configured)",
+	Long:  "列出已经设置过的公开访问地址 (List the public access addresses that have been configured)",
+	Run: func(cmd *cobra.Command, args []string) {
+		alirds.RdsPublicLs()
+	},
+}
+
+var rdsPublicCancelCmd = &cobra.Command{
+	Use:   "cancel",
+	Short: "取消云数据库的公开访问 (Disable public access for the RDS instance)",
+	Long:  "取消云数据库的公开访问 (Disable public access for the RDS instance)",
+	Run: func(cmd *cobra.Command, args []string) {
+		alirds.RdsPublicCancel()
+	},
+}
+
+var rdsWhiteListCmd = &cobra.Command{
+	Use:   "whiteList",
+	Short: "为 RDS 添加白名单 (Add whitelist for RDS)",
+	Long:  "为 RDS 添加白名单 (Add whitelist for RDS)",
 	Run: func(cmd *cobra.Command, args []string) {
 		if rdsConnect == "" && rdsConnectCancel == false && rdsWhiteList == "" && rdsWhiteListCancel == false {
 			log.Warnf("还未指定要执行的命令 (The command to be executed has not been specified yet)\n")

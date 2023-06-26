@@ -22,10 +22,10 @@ func InsertRDSAccountsCache(provider string, DBInstanceId string, engine string,
 	CacheDb.Create(&RDSAccountsCache)
 }
 
-func DeleteRDSAccountCache(provider string, userName string, DBInstanceId string) {
+func DeleteRDSAccountCache(provider string, DBInstanceId string) {
 	var RDSAccountsCache []pubutil.RDSAccountsCache
 	config := SelectConfigInUse(provider)
-	CacheDb.Where("access_key_id = ? AND user_name = ? AND db_instance_id = ?", config.AccessKeyId, userName, DBInstanceId).Delete(&RDSAccountsCache)
+	CacheDb.Where("access_key_id = ? AND db_instance_id = ?", config.AccessKeyId, DBInstanceId).Delete(&RDSAccountsCache)
 }
 
 func SelectRDSAccountCache(provider string) []pubutil.RDSAccountsCache {

@@ -7,7 +7,6 @@ import (
 	log "github.com/sirupsen/logrus"
 	"github.com/teamssix/cf/pkg/cloud"
 	"github.com/teamssix/cf/pkg/util"
-	"github.com/teamssix/cf/pkg/util/cmdutil"
 	"github.com/teamssix/cf/pkg/util/database"
 	"github.com/teamssix/cf/pkg/util/errutil"
 	"github.com/teamssix/cf/pkg/util/pubutil"
@@ -105,7 +104,9 @@ func AddRdsAccount(DBInstanceId string, userName string) {
 		for _, v := range RDSAccountsCache {
 			SN = SN + 1
 			dataSingle := []string{strconv.Itoa(SN), v.DBInstanceId, v.Engine, v.UserName, v.Password, v.Region, v.CreateTime}
-			data = append(data, dataSingle)
+			if v.DBInstanceId == specifiedDBInstanceId && v.UserName == userName {
+				data = append(data, dataSingle)
+			}
 		}
 		header = []string{"序号 (SN)", "实例 ID (Instance ID)", "数据库类型 (Type)", "用户名 (User Name)", "密码 (Password)", "区域 (Region)", "创建时间 (Create Time)"}
 		var td = cloud.TableData{Header: header, Body: data}
@@ -171,8 +172,13 @@ func LsRdsAccount() {
 		dataSingle := []string{strconv.Itoa(SN), v.DBInstanceId, v.Engine, v.UserName, v.Password, v.Region, v.CreateTime}
 		data = append(data, dataSingle)
 	}
-	header = []string{"序号 (SN)", "实例 ID (Instance ID)", "数据库类型 (Type)", "用户名 (User Name)", "密码 (Password)", "区域 (Region)", "创建时间 (Create Time)"}
-	cmdutil.PrintTable(data, header, "RDS Accounts")
+	if len(data) == 0 {
+		log.Infoln("未找到任何信息 (No information found.)")
+	} else {
+		header = []string{"序号 (SN)", "实例 ID (Instance ID)", "数据库类型 (Type)", "用户名 (User Name)", "密码 (Password)", "区域 (Region)", "创建时间 (Create Time)"}
+		var td = cloud.TableData{Header: header, Body: data}
+		cloud.PrintTable(td, "")
+	}
 }
 
 func DelRdsAccount() {
@@ -222,7 +228,7 @@ func DelRdsAccount() {
 	_, err := RDSClient(Region).DeleteAccount(request)
 	errutil.HandleErr(err)
 	if err == nil {
-		database.DeleteRDSAccountCache("alibaba", UserName, DBInstanceId)
-		log.Infoln("删除成功 (Delete completed)")
+		database.DeleteRDSAccountCache("alibaba", DBInstanceId)
+		log.Infof("%s 用户删除成功 (%s user delete completed)", UserName, UserName)
 	}
 }

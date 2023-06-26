@@ -5,6 +5,7 @@ import (
 	"github.com/AlecAivazis/survey/v2"
 	"github.com/aliyun/alibaba-cloud-sdk-go/services/ecs"
 	log "github.com/sirupsen/logrus"
+	"github.com/teamssix/cf/pkg/cloud"
 	"github.com/teamssix/cf/pkg/util/cmdutil"
 	"github.com/teamssix/cf/pkg/util/database"
 	"github.com/teamssix/cf/pkg/util/errutil"
@@ -129,8 +130,13 @@ func GetImageShare() {
 		dataSingle := []string{strconv.Itoa(SN), v.InstanceId, v.ImageId, v.ShareAccountId, v.Status, v.Region, v.Time}
 		data = append(data, dataSingle)
 	}
-	header = []string{"序号 (SN)", "实例 ID (Instance ID)", "镜像 ID (Image Name)", "共享帐号 ID (Share Account ID)", "状态 (Status)", "区域 ID (Region ID)", "时间 (Time)"}
-	cmdutil.PrintTable(data, header, "Images Sahre")
+	if len(data) == 0 {
+		log.Infoln("未找到任何信息 (No information found.)")
+	} else {
+		header = []string{"序号 (SN)", "实例 ID (Instance ID)", "镜像 ID (Image Name)", "共享帐号 ID (Share Account ID)", "状态 (Status)", "区域 ID (Region ID)", "时间 (Time)"}
+		var td = cloud.TableData{Header: header, Body: data}
+		cloud.PrintTable(td, "")
+	}
 }
 
 func ImageDelete() {

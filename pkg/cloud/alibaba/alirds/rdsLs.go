@@ -146,7 +146,9 @@ func PrintDBInstancesList(region string, running bool, specifiedDBInstanceId str
 			log.Info("未发现 RDS 资源 (No RDS resources found)")
 		}
 		for k, v := range DBInstancesList {
-			color.Tag("danger").Println(fmt.Sprintf("\n%d %s 实例信息 (%s Instance information)", k+1, v.DBInstanceId, v.DBInstanceId))
+			if len(DBInstancesList) > 1 {
+				color.Tag("danger").Println(fmt.Sprintf("\n%d %s 实例信息 (%s Instance information)", k+1, v.DBInstanceId, v.DBInstanceId))
+			}
 
 			color.Tag("warn").Println("\n基础信息 (Basic information)")
 			color.Tag("info").Print("ID: ")

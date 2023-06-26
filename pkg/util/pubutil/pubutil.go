@@ -86,6 +86,18 @@ type RDSAccountsCache struct {
 	CreateTime   string
 }
 
+type RDSPublicCache struct {
+	AccessKeyId       string
+	DBInstanceId      string
+	Provider          string
+	Region            string
+	IPAddress         string
+	ConnectionAddress string
+	Port              string
+	Engine            string
+	CreateTime        string
+}
+
 func GetUserDir() string {
 	home, _ := os.UserHomeDir()
 	return home

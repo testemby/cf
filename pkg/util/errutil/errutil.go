@@ -35,6 +35,8 @@ var errorMessages = map[string]string{
 	"Status=403 Forbidden, Code=AccessDenied":                             "当前权限不足 (Insufficient permissions)",
 	"Message: The specified InstanceId does not exist.":                   "指定的实例不存在 (The specified instance does not exist.)",
 	"Message: Specified account name already exists in this instance.":    "用户名已存在，请指定其他的用户名 (The username already exists. Please specify a different username.)",
+	"Message: Other endpoint exist.":                                      "数据库已经是公开访问的 (The database is already publicly accessible.)",
+	"Message: Current DB instance state does not support this operation.": "当前数据库状态不支持此操作，请稍后重试 (The current database state does not support this operation. Please try again later.)",
 }
 
 var errorMessagesNoExit = map[string]string{
