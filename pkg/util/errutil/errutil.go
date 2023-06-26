@@ -37,6 +37,8 @@ var errorMessages = map[string]string{
 	"Message: Specified account name already exists in this instance.":    "用户名已存在，请指定其他的用户名 (The username already exists. Please specify a different username.)",
 	"Message: Other endpoint exist.":                                      "数据库已经是公开访问的 (The database is already publicly accessible.)",
 	"Message: Current DB instance state does not support this operation.": "当前数据库状态不支持此操作，请稍后重试 (The current database state does not support this operation. Please try again later.)",
+	"Message: Specified SecurityIPList is not valid.":                     "指定的白名单无效，请检查后重试，注意是否有使用 CIDR 格式 (The specified whitelist is invalid. Please check and try again, ensuring that you are using the CIDR format if required.)",
+	"Message: Invalid security ip list specified, duplicated.":            "该白名单列表已存在 (The whitelist entry already exists.)",
 }
 
 var errorMessagesNoExit = map[string]string{

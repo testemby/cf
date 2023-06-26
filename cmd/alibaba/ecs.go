@@ -76,6 +76,7 @@ func init() {
 	ecsImageShareCmd.Flags().StringVarP(&accountId, "accountId", "a", "", "指定镜像共享的阿里云帐号 ID (Specify the Alibaba Cloud account ID to share the image with)")
 	ecsImageShareCmd.Flags().StringVarP(&ecsImageShareRegion, "region", "r", "all", "指定区域 ID (Specify region ID)")
 	ecsImageShareCmd.Flags().StringVarP(&ecsImageShareSpecifiedInstanceId, "InstanceId", "i", "all", "指定实例 ID (Specify Instance ID)")
+	ecsImageShareCmd.MarkFlagRequired("accountId")
 }
 
 var ecsCmd = &cobra.Command{
@@ -122,7 +123,7 @@ var ecsImageShareCmd = &cobra.Command{
 			log.Warnln("未指定实例 ID (Instance ID not specified.)")
 		} else if ecsImageShareRegion == "all" && ecsImageShareSpecifiedInstanceId != "all" {
 			log.Warnln("未指定区域 (Region not specified.)")
-		} else if accountId == "" && len(accountId) != 16 {
+		} else if len(accountId) != 16 {
 			log.Warnln("帐号 ID 输入有误，请确认后再进行尝试 (Incorrect account ID input. Please verify it and try again.)")
 		} else {
 			var isSure bool
