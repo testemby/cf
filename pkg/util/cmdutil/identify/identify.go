@@ -26,7 +26,7 @@ func AlibabaIdentity(accessKey, secretKey, stsToken string) bool {
 		} else if strings.Contains(err.Error(), "SignatureDoesNotMatch") {
 			log.Debugln("AccessKey 属于阿里云 (AccessKey belongs to Aliyun)")
 			log.Debugln("AccessKeySecret 似乎输入有误 (AccessKeySecret appears to be incorrect)")
-			return true
+			return false
 		}
 	}
 	log.Debugln("AccessKey 属于阿里云 (AccessKey belongs to Aliyun)")
