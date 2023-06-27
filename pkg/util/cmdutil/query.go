@@ -24,12 +24,6 @@ func IdentifyProvider(AccessKeyId, SecretAccessKeyId, SessionToken string) pubut
 			provider.CN = "腾讯云"
 			provider.EN = "Tencent Cloud"
 		}
-	case (regexp.MustCompile("^[A-Z0-9]*$").MatchString(AccessKeyId) && (len(AccessKeyId) == 20 || len(AccessKeyId) == 40)):
-		// 正则已验证完全正确
-		if SecretAccessKeyId == "" || identify.HuaweiIdentity(AccessKeyId, SecretAccessKeyId, SessionToken) {
-			provider.CN = "华为云"
-			provider.EN = "Huawei Cloud"
-		}
 	case regexp.MustCompile("(A3T[A-Z0-9]|AKIA|AGPA|AIDA|AROA|AIPA|ANPA|ANVA|ASIA)[A-Z0-9]{16}").MatchString(AccessKeyId):
 		// 正则源自 RExpository
 		if SecretAccessKeyId == "" || identify.AwsIdentity(AccessKeyId, SecretAccessKeyId, SessionToken) {
@@ -47,14 +41,6 @@ func IdentifyProvider(AccessKeyId, SecretAccessKeyId, SessionToken string) pubut
 			provider.CN = "火山引擎"
 			provider.EN = "Volcano Engine"
 		}
-	case (regexp.MustCompile(`^[a-zA-Z0-9-_]{40}$`).MatchString(AccessKeyId)):
-		if SecretAccessKeyId == "" || identify.QiniuIdentity(AccessKeyId, SecretAccessKeyId) {
-			provider.CN = "七牛云"
-			provider.EN = "Qiniu Cloud"
-		}
-	case strings.HasPrefix(AccessKeyId, "UCLOUD"):
-		provider.CN = "优刻得"
-		provider.EN = "UCloud"
 	case regexp.MustCompile("^AKLT[\\w-]{20}$").MatchString(AccessKeyId):
 		// 正则已验证完全正确
 		provider.CN = "金山云"
@@ -68,6 +54,20 @@ func IdentifyProvider(AccessKeyId, SecretAccessKeyId, SessionToken string) pubut
 		// 正则源自 RExpository
 		provider.CN = "谷歌云"
 		provider.EN = "GCP"
+	case (regexp.MustCompile("^[A-Z0-9]*$").MatchString(AccessKeyId) && (len(AccessKeyId) == 20 || len(AccessKeyId) == 40)):
+		// 正则已验证完全正确
+		if SecretAccessKeyId == "" || identify.HuaweiIdentity(AccessKeyId, SecretAccessKeyId, SessionToken) {
+			provider.CN = "华为云"
+			provider.EN = "Huawei Cloud"
+		}
+	case (regexp.MustCompile(`^[a-zA-Z0-9-_]{40}$`).MatchString(AccessKeyId)):
+		if SecretAccessKeyId == "" || identify.QiniuIdentity(AccessKeyId, SecretAccessKeyId) {
+			provider.CN = "七牛云"
+			provider.EN = "Qiniu Cloud"
+		}
+	case strings.HasPrefix(AccessKeyId, "UCLOUD"):
+		provider.CN = "优刻得"
+		provider.EN = "UCloud"
 	default:
 		provider.CN = ""
 		provider.EN = ""
