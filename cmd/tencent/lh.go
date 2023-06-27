@@ -9,7 +9,7 @@ import (
 var (
 	lhFlushCache          bool
 	lhRegion              string
-	lhSpecifiedInstanceID string
+	lhSpecifiedInstanceId string
 
 	sshKeyName   string
 	deleteSshKey bool
@@ -20,7 +20,7 @@ func init() {
 	lhCmd.AddCommand(lhLsCmd)
 	lhCmd.AddCommand(lhExecCmd)
 	lhCmd.PersistentFlags().BoolVar(&lhFlushCache, "flushCache", false, "刷新缓存，不使用缓存数据 (Refresh the cache without using cached data)")
-	lhCmd.Flags().StringVarP(&lhSpecifiedInstanceID, "instanceID", "i", "all", "指定实例 ID (Specify Instance ID)")
+	lhCmd.Flags().StringVarP(&lhSpecifiedInstanceId, "InstanceId", "i", "all", "指定实例 ID (Specify Instance ID)")
 
 	lhLsCmd.Flags().BoolVar(&running, "running", false, "只显示正在运行的实例 (Show only running instances)")
 	lhLsCmd.Flags().StringVarP(&lhRegion, "region", "r", "all", "指定区域 ID (Specify Region ID)")
@@ -46,7 +46,7 @@ var lhLsCmd = &cobra.Command{
 	Short: "列出所有的实例 (List all instances)",
 	Long:  "列出所有的实例 (List all instances)",
 	Run: func(cmd *cobra.Command, args []string) {
-		tencentlh2.PrintInstancesList(lhRegion, running, lhSpecifiedInstanceID, lhFlushCache)
+		tencentlh2.PrintInstancesList(lhRegion, running, lhSpecifiedInstanceId, lhFlushCache)
 	},
 }
 
@@ -65,7 +65,7 @@ var lhExecCmd = &cobra.Command{
 			log.Warnln("还未指定要执行的命令 (The command to be executed has not been specified yet)")
 			cmd.Help()
 		} else {
-			tencentlh2.LhExec(command, commandFile, scriptType, lhSpecifiedInstanceID, lhRegion, batchCommand, userData, metaDataSTSToken, lhFlushCache, lhost, lport, timeOut)
+			tencentlh2.LhExec(command, commandFile, scriptType, lhSpecifiedInstanceId, lhRegion, batchCommand, userData, metaDataSTSToken, lhFlushCache, lhost, lport, timeOut)
 		}
 	},
 }

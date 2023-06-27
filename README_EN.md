@@ -11,18 +11,13 @@
 <a href="README.md">中文</a> | English
 </p>
 
-
 ---
 
 CF is a cloud exploitation framework, It can facilitate the work of the red team after obtaining access key.
 
 CF releases: [github.com/teamssix/cf/releases](https://github.com/teamssix/cf/releases)
 
-<details> <summary>CF Command Usage</summary><br>
-
 ![](https://cdn.jsdelivr.net/gh/teamssix/BlogImages/imgs/202304291924886.png)
-    
-</details>
 
 Current Supported Clouds:
 
@@ -45,28 +40,26 @@ Download the compressed files corresponding to the system in the CF download url
 
 <details> <summary>The following systems are currently supported</summary><br>
 
-|          File name           | System  |            Architecture            | Bit  |
-| :--------------------------: | :-----: | :--------------------------------: | :--: |
-| cf_x.x.x_darwin_amd64.tar.gz |  MacOS  |     AMD (Mac for Intel chips)      |  64  |
-| cf_x.x.x_darwin_arm64.tar.gz |  MacOS  | ARM (Mac for Apple M Series Chips) |  64  |
-|  cf_x.x.x_linux_386.tar.gz   |  Linux  |                AMD                 |  32  |
-| cf_x.x.x_linux_amd64.tar.gz  |  Linux  |                AMD                 |  64  |
-| cf_x.x.x_linux_arm64.tar.gz  |  Linux  |                ARM                 |  64  |
-|   cf_x.x.x_windows_386.zip   | Windows |                AMD                 |  32  |
-|  cf_x.x.x_windows_amd64.zip  | Windows |                AMD                 |  64  |
-|  cf_x.x.x_windows_arm64.zip  | Windows |                ARM                 |  64  |
+|          File name           | System  |            Architecture            | Bit |
+| :--------------------------: | :-----: | :--------------------------------: | :-: |
+| cf_x.x.x_darwin_amd64.tar.gz |  MacOS  |     AMD (Mac for Intel chips)      | 64  |
+| cf_x.x.x_darwin_arm64.tar.gz |  MacOS  | ARM (Mac for Apple M Series Chips) | 64  |
+|  cf_x.x.x_linux_386.tar.gz   |  Linux  |                AMD                 | 32  |
+| cf_x.x.x_linux_amd64.tar.gz  |  Linux  |                AMD                 | 64  |
+| cf_x.x.x_linux_arm64.tar.gz  |  Linux  |                ARM                 | 64  |
+|   cf_x.x.x_windows_386.zip   | Windows |                AMD                 | 32  |
+|  cf_x.x.x_windows_amd64.zip  | Windows |                AMD                 | 64  |
+|  cf_x.x.x_windows_arm64.zip  | Windows |                ARM                 | 64  |
 
 </details>
 
 ## Cases
 
-|               Title                | Version |                         Article URL                          |  Author  | Release Time |
-| :--------------------------------: | :-----: | :----------------------------------------------------------: | :------: | :----------: |
-|    《CF 云环境利用框架最佳实践》    |      v0.4.5      | [wiki.teamssix.com/cf/cases/cf_best_practices](https://wiki.teamssix.com/cf/cases/cf_best_practices.html) | TeamsSix | 2023.6.4 |
-|    《记一次打穿云上内网的攻防实战》    |      v0.4.5      | [zone.huoxian.cn/d/2766](https://zone.huoxian.cn/d/2766) | Walker 沃克 | 2023.5.21 |
-|    《一次简单的"云"上野战记录》    |      v0.4.2      | [mp.weixin.qq.com/s/wi8CoNwdpfJa6eMP4t1PCQ](https://mp.weixin.qq.com/s/wi8CoNwdpfJa6eMP4t1PCQ) | carrypan | 2022.10.19 |
-| 《记录一次平平无奇的云上攻防过程》 |      v0.4.0      | [zone.huoxian.cn/d/2557](https://zone.huoxian.cn/d/2557) | TeamsSix | 2022.9.14  |
-|   《我用 CF 打穿了他的云上内网》   |      v0.2.4      | [zone.huoxian.cn/d/1341-cf](https://zone.huoxian.cn/d/1341-cf) | TeamsSix | 2022.7.13  |
+|               Title                | Version |                                       Article URL                                       |  Author  | Release Time |
+| :--------------------------------: | :-----: | :-------------------------------------------------------------------------------------: | :------: | :----------: |
+|    《一次简单的"云"上野战记录》    | v0.4.2  | [https://mp.weixin.qq.com/s/wi8C...](https://mp.weixin.qq.com/s/wi8CoNwdpfJa6eMP4t1PCQ) | carrypan |  2022.10.19  |
+| 《记录一次平平无奇的云上攻防过程》 | v0.4.0  |            [https://zone.huoxian.cn/d/2557](https://zone.huoxian.cn/d/2557)             | TeamsSix |  2022.9.14   |
+|   《我用 CF 打穿了他的云上内网》   | v0.2.4  |         [https://zone.huoxian.cn/d/1341-cf](https://zone.huoxian.cn/d/1341-cf)          | TeamsSix |  2022.7.13   |
 
 ## Easy to start
 
@@ -153,26 +146,36 @@ If it feels good, maybe you can give me a Star ~
 Thank you for your contributions to CF, A note on contributions: [CONTRIBUTING](https://github.com/teamssix/cf/blob/main/CONTRIBUTING.md)
 
 <div align=center>
-<table>
-    <tr>
-        <td align="center"><a href="https://github.com/teamssix"><img alt="TeamsSix"
-                                src="https://avatars.githubusercontent.com/u/49087564?v=4" style="width: 100px;"/><br/>TeamsSix</a></td>
-        <td align="center"><a href="https://github.com/Amzza0x00"><img alt="Amzza0x00"
-                                src="https://avatars.githubusercontent.com/u/32904523?v=4"  style="width: 100px;"/><br/>Amzza0x00</a></td>
-        <td align="center"><a href="https://github.com/Esonhugh"><img alt="Esonhugh"
-                                src="https://avatars.githubusercontent.com/u/32677240?v=4"  style="width: 100px;"/><br/>Esonhugh</a></td>
-        <td align="center"><a href="https://github.com/Dawnnnnnn"><img alt="Dawnnnnnn"
-                                src="https://avatars.githubusercontent.com/u/24506421?v=4"  style="width: 100px;"/><br/>Dawnnnnnn</a></td>
-        <td align="center"><a href="https://github.com/Belos-pretender"><img alt="Belos-pretender"
-                                src="https://avatars.githubusercontent.com/u/52148409?v=4"  style="width: 100px;"/><br/>Belos-pretender</a></td>
-        <td align="center"><a href="https://github.com/0xorOne"><img alt="Kfzz1"
-                                src="https://avatars.githubusercontent.com/u/125463022?v=4"  style="width: 100px;"/><br/>Kfzz1</a></td>
-</table>
+    <table>
+        <tr>
+            <td align="center">
+                <a href="https://github.com/teamssix"><img alt="TeamsSix" src="https://avatars.githubusercontent.com/u/49087564?v=4" style="width: 100px;" /><br />TeamsSix</a>
+            </td>
+            <td align="center">
+                <a href="https://github.com/Amzza0x00"><img alt="Amzza0x00" src="https://avatars.githubusercontent.com/u/32904523?v=4" style="width: 100px;" /><br />Amzza0x00</a>
+            </td>
+            <td align="center">
+                <a href="https://github.com/Esonhugh"><img alt="Esonhugh" src="https://avatars.githubusercontent.com/u/32677240?v=4" style="width: 100px;" /><br />Esonhugh</a>
+            </td>
+            <td align="center">
+                <a href="https://github.com/Dawnnnnnn"><img alt="Dawnnnnnn" src="https://avatars.githubusercontent.com/u/24506421?v=4" style="width: 100px;" /><br />Dawnnnnnn</a>
+            </td>
+            <td align="center">
+                <a href="https://github.com/Belos-pretender"><img alt="Belos-pretender" src="https://avatars.githubusercontent.com/u/52148409?v=4" style="width: 100px;" /><br />Belos-pretender</a>
+            </td>
+            <td align="center">
+                <a href="https://github.com/0xorOne"><img alt="Kfzz1" src="https://avatars.githubusercontent.com/u/125463022?v=4" style="width: 100px;" /><br />Kfzz1</a>
+            </td>
+        </tr>
+        <tr>
+            <td align="center">
+                <a href="https://github.com/shadowabi"><img alt="shadowabi" src="https://avatars.githubusercontent.com/u/50265741?v=4" style="width: 100px;" /><br />shadowabi</a>
+            </td>
+        </tr>
+    </table>
 </div>
 
 <div align=center><a href="https://github.com/teamssix"><img src="https://repobeats.axiom.co/api/embed/30b8de6c059cbe83fe0ba44fff91136270a39ab9.svg"></a></div>
-
-
 
 ## 404Starlink
 
@@ -196,12 +199,10 @@ If you would like to work with me on this, you can join the team by sending your
 
 <div align=center><a href="https://github.com/teamssix"><img src="https://api.star-history.com/svg?repos=teamssix/cf&type=Timeline"></a></div>
 
-
-
 ## Warning
 
-* This tool can only be used in legal scenarios and is strictly forbidden to be used in illegal scenarios.
-* The risks involved in this tool are the responsibility of the tenant and not the cloud providers.
+- This tool can only be used in legal scenarios and is strictly forbidden to be used in illegal scenarios.
+- The risks involved in this tool are the responsibility of the tenant and not the cloud providers.
 
 <div align=center><img width="400" src="https://cdn.jsdelivr.net/gh/teamssix/BlogImages/imgs/202301041622502.JPG"></div><br>
 

@@ -33,6 +33,12 @@ var errorMessages = map[string]string{
 	"Incorrect IAM authentication information":                            "当前 AK 信息无效 (Current AccessKey information is invalid)",
 	"The API does not exist or has not been published in the environment": "当前用户已存在，请指定其他用户名 (User already exists, please specify another user name)",
 	"Status=403 Forbidden, Code=AccessDenied":                             "当前权限不足 (Insufficient permissions)",
+	"Message: The specified InstanceId does not exist.":                   "指定的实例不存在 (The specified instance does not exist.)",
+	"Message: Specified account name already exists in this instance.":    "用户名已存在，请指定其他的用户名 (The username already exists. Please specify a different username.)",
+	"Message: Other endpoint exist.":                                      "数据库已经是公开访问的 (The database is already publicly accessible.)",
+	"Message: Current DB instance state does not support this operation.": "当前数据库状态不支持此操作，请稍后重试 (The current database state does not support this operation. Please try again later.)",
+	"Message: Specified SecurityIPList is not valid.":                     "指定的白名单无效，请检查后重试，注意是否有使用 CIDR 格式 (The specified whitelist is invalid. Please check and try again, ensuring that you are using the CIDR format if required.)",
+	"Message: Invalid security ip list specified, duplicated.":            "该白名单列表已存在 (The whitelist entry already exists.)",
 }
 
 var errorMessagesNoExit = map[string]string{
@@ -58,6 +64,7 @@ var errorMessagesExit = map[string]string{
 	"Code=AuthFailure.SignatureFailure": "请求签名验证失败，请检查您的访问密钥是否正确 (Request signature verification failed, please check if your access key is correct.)",
 	"read: connection reset by peer":    "网络连接出现错误，请检查您的网络环境是否正常 (There is an error in your network connection, please check if your network environment is normal.)",
 	"InvalidAccessKeyId.NotFound":       "当前访问密钥无效 (Current access key are invalid)",
+	"InvalidAccessKeySecret":            "无效的 AccessKey (Invalid AccessKey)",
 }
 
 func HandleErr(e error) {

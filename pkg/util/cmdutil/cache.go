@@ -101,6 +101,11 @@ func ReadECSCache(provider string) []pubutil.ECSCache {
 	return database.SelectECSCache(provider)
 }
 
+func ReadRDSCache(provider string) []pubutil.RDSCache {
+	log.Debugf("正在读取 %s 的云数据库实例缓存数据 (Reading %s rds instances cache data)", provider, provider)
+	return database.SelectRDSCache(provider)
+}
+
 func PrintOSSCacheFile(header []string, region string, provider string, resourceType string, ossLsBucket string) {
 	var data [][]string
 	OSSCache := database.SelectOSSCacheFilter(provider, region)
@@ -116,9 +121,9 @@ func PrintOSSCacheFile(header []string, region string, provider string, resource
 	PrintTable(data, header, resourceType)
 }
 
-func PrintECSCacheFile(header []string, region string, specifiedInstanceID string, provider string, resourceType string, running bool) {
+func PrintECSCacheFile(header []string, region string, specifiedInstanceId string, provider string, resourceType string, running bool) {
 	var data [][]string
-	ECSCache := database.SelectEcsCacheFilter(provider, region, specifiedInstanceID, running)
+	ECSCache := database.SelectEcsCacheFilter(provider, region, specifiedInstanceId, running)
 	for _, v := range ECSCache {
 		dataSingle := []string{v.SN, v.InstanceId, v.InstanceName, v.OSName, v.OSType, v.Status, v.PrivateIpAddress, v.PublicIpAddress, v.RegionId}
 		data = append(data, dataSingle)
@@ -126,9 +131,9 @@ func PrintECSCacheFile(header []string, region string, specifiedInstanceID strin
 	PrintTable(data, header, resourceType)
 }
 
-func PrintRDSCacheFile(header []string, region string, specifiedDBInstanceID string, engine string, provider string, resourceType string) {
+func PrintRDSCacheFile(header []string, region string, specifiedDBInstanceId string, engine string, provider string, resourceType string) {
 	var data [][]string
-	RDSCache := database.SelectRDSCacheFilter(provider, region, specifiedDBInstanceID, engine)
+	RDSCache := database.SelectRDSCacheFilter(provider, region, specifiedDBInstanceId, engine)
 	for _, v := range RDSCache {
 		dataSingle := []string{v.SN, v.DBInstanceId, v.Engine, v.EngineVersion, v.DBInstanceStatus, v.RegionId}
 		data = append(data, dataSingle)
@@ -139,9 +144,9 @@ func PrintRDSCacheFile(header []string, region string, specifiedDBInstanceID str
 func PrintTable(data [][]string, header []string, resourceType string) {
 	var td = cloud.TableData{Header: header, Body: data}
 	if len(data) == 0 {
-		log.Info(fmt.Sprintf("未发现 %s 资源，在默认情况下 CF 会使用缓存数据，您可以使用 --flushCache 命令获取实时数据。(No %s resources found, by default CF will use cached data, you can use --flushCache command to get live data.)", resourceType, resourceType))
+		log.Info(fmt.Sprintf("未发现 %s 缓存资源 (No %s cache resources found)", resourceType, resourceType))
 	} else {
-		log.Info("找到缓存数据，以下为缓存数据结果，您可以加上 --flushCache 参数获取最新数据。(Find the cached data, the following is the result of the cached data, you can add the --flushCache parameter to get the latest data.)")
+		log.Info("找到缓存数据，以下为缓存数据结果。(Find the cached data, the following is the result of the cached data.)")
 		Caption := fmt.Sprintf("%s 资源 (%s resources)", resourceType, resourceType)
 		cloud.PrintTable(td, Caption)
 	}

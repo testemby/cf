@@ -71,7 +71,7 @@ func TakeoverConsole(userName string) {
 	data := [][]string{
 		{OwnerID, userName, password, loginURL},
 	}
-	database.InsertTakeoverConsoleCache("tencent", OwnerID, userName, password, loginURL)
+	database.InsertTakeoverConsoleCache("tencent", OwnerID, userName, password, loginURL, "N/A", "N/A")
 	var header = []string{"主账号 ID (Primary Account ID)", "子用户名 (Sub User Name)", "登录密码 (Password)", "控制台登录地址 (Login URL)"}
 	var td = cloud.TableData{Header: header, Body: data}
 	cloud.PrintTable(td, "")

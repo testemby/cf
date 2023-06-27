@@ -7,8 +7,9 @@ import (
 )
 
 var (
-	userName string
-	password string
+	userName  string
+	password  string
+	accessKey bool
 )
 
 func init() {
@@ -17,6 +18,7 @@ func init() {
 	consoleCmd.AddCommand(lsConsoleCmd)
 
 	consoleCmd.Flags().StringVarP(&userName, "userName", "u", "crossfire", "指定用户名 (Specify user name)")
+	consoleCmd.Flags().BoolVarP(&accessKey, "accessKey", "a", false, "创建 AccessKey (Create AccessKey)")
 }
 
 var consoleCmd = &cobra.Command{
@@ -24,7 +26,7 @@ var consoleCmd = &cobra.Command{
 	Short: "一键接管控制台 (Takeover console)",
 	Long:  "一键接管控制台 (Takeover console)",
 	Run: func(cmd *cobra.Command, args []string) {
-		aliconsole.TakeoverConsole(userName)
+		aliconsole.TakeoverConsole(userName, accessKey)
 	},
 }
 

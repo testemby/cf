@@ -7,12 +7,14 @@ require (
 	github.com/aliyun/alibaba-cloud-sdk-go v1.61.1685
 	github.com/aliyun/aliyun-oss-go-sdk v2.2.4+incompatible
 	github.com/aws/aws-sdk-go v1.44.109
+	github.com/baidubce/bce-sdk-go v0.9.151
 	github.com/bitly/go-simplejson v0.5.0
 	github.com/gookit/color v1.5.1
 	github.com/huaweicloud/huaweicloud-sdk-go-obs v3.23.3+incompatible
 	github.com/huaweicloud/huaweicloud-sdk-go-v3 v0.1.36
 	github.com/ivanpirog/coloredcobra v1.0.1
 	github.com/olekukonko/tablewriter v0.0.5
+	github.com/qiniu/go-sdk/v7 v7.16.0
 	github.com/schollz/progressbar/v3 v3.8.7
 	github.com/sirupsen/logrus v1.9.0
 	github.com/spf13/cobra v1.5.0
@@ -25,6 +27,7 @@ require (
 	github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/sts v1.0.475
 	github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/tat v1.0.447
 	github.com/thoas/go-funk v0.9.3
+	github.com/volcengine/volc-sdk-golang v1.0.105
 	github.com/x-cray/logrus-prefixed-formatter v0.5.2
 	gorm.io/gorm v1.23.8
 )
@@ -32,6 +35,7 @@ require (
 require (
 	github.com/baiyubin/aliyun-sts-go-sdk v0.0.0-20180326062324-cfa1a18b161f // indirect
 	github.com/bmizerany/assert v0.0.0-20160611221934-b7ed37b82869 // indirect
+	github.com/cenkalti/backoff/v4 v4.1.2 // indirect
 	github.com/fatih/color v1.13.0 // indirect
 	github.com/google/go-cmp v0.5.8 // indirect
 	github.com/google/uuid v1.3.0 // indirect
@@ -41,7 +45,6 @@ require (
 	github.com/jmespath/go-jmespath v0.4.0 // indirect
 	github.com/json-iterator/go v1.1.12 // indirect
 	github.com/kballard/go-shellquote v0.0.0-20180428030007-95032a82bc51 // indirect
-	github.com/kr/pretty v0.2.0 // indirect
 	github.com/mattn/go-colorable v0.1.9 // indirect
 	github.com/mattn/go-isatty v0.0.14 // indirect
 	github.com/mattn/go-runewidth v0.0.13 // indirect
@@ -59,12 +62,13 @@ require (
 	go.mongodb.org/mongo-driver v1.11.2 // indirect
 	golang.org/x/crypto v0.7.0 // indirect
 	golang.org/x/mod v0.8.0 // indirect
+	golang.org/x/net v0.8.0 // indirect
+	golang.org/x/sync v0.1.0 // indirect
 	golang.org/x/sys v0.6.0 // indirect
 	golang.org/x/term v0.6.0 // indirect
 	golang.org/x/text v0.8.0 // indirect
 	golang.org/x/time v0.0.0-20220609170525-579cf78fd858 // indirect
 	golang.org/x/tools v0.6.0 // indirect
-	gopkg.in/check.v1 v1.0.0-20190902080502-41f04d3bba15 // indirect
 	gopkg.in/ini.v1 v1.66.6 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 	lukechampine.com/uint128 v1.2.0 // indirect

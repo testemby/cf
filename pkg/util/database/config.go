@@ -15,15 +15,15 @@ func InsertConfig(config cloud.Config) {
 	if config.AccessKeyId == "" {
 		log.Warnln("当访问密钥 ID 为空的时候将不会被存储 (When the Access Key ID is empty it will not be stored.)")
 	} else {
-		var configAccessKeyIDList []string
+		var configAccessKeyIdList []string
 		configList := SelectConfig()
 		for _, v := range configList {
-			configAccessKeyIDList = append(configAccessKeyIDList, v.AccessKeyId)
+			configAccessKeyIdList = append(configAccessKeyIdList, v.AccessKeyId)
 		}
-		sort.Strings(configAccessKeyIDList)
-		index := sort.SearchStrings(configAccessKeyIDList, config.AccessKeyId)
+		sort.Strings(configAccessKeyIdList)
+		index := sort.SearchStrings(configAccessKeyIdList, config.AccessKeyId)
 
-		if index < len(configAccessKeyIDList) && configAccessKeyIDList[index] == config.AccessKeyId {
+		if index < len(configAccessKeyIdList) && configAccessKeyIdList[index] == config.AccessKeyId {
 			log.Warnf("已配置过 %s 访问密钥 (The %s Access Key has been configured.)", pubutil.MaskAK(config.AccessKeyId), pubutil.MaskAK(config.AccessKeyId))
 		} else {
 			CacheDb.Create(&config)
@@ -78,9 +78,9 @@ func DeleteConfig() {
 			err := survey.AskOne(prompt, &isTrue)
 			errutil.HandleErr(err)
 			if isTrue {
-				accessKeyId := strings.Split(config, "\t")[2]
-				CacheDb.Where("access_key_id = ?", accessKeyId).Delete(&configList)
-				log.Infof("%s 访问密钥已删除 (%s Access Key deleted)", pubutil.MaskAK(accessKeyId), pubutil.MaskAK(accessKeyId))
+				AccessKeyId := strings.Split(config, "\t")[2]
+				CacheDb.Where("access_key_id = ?", AccessKeyId).Delete(&configList)
+				log.Infof("%s 访问密钥已删除 (%s Access Key deleted)", pubutil.MaskAK(AccessKeyId), pubutil.MaskAK(AccessKeyId))
 			} else {
 				log.Infoln("已取消删除选中的访问密钥 (Canceled delete the selected access key.)")
 			}
@@ -113,10 +113,10 @@ func UpdateConfigSwitch(provider string) {
 		}
 		err := survey.AskOne(prompt, &config)
 		errutil.HandleErr(err)
-		accessKeyID := strings.Split(config, "\t")[2]
+		AccessKeyId := strings.Split(config, "\t")[2]
 		CacheDb.Model(&cloud.Config{}).Where("provider = ?", provider).Update("InUse", false)
-		CacheDb.Model(&cloud.Config{}).Where("access_key_id = ?", accessKeyID).Update("InUse", true)
-		log.Infof("访问密钥已切换至 %s (Access Key have been switched to %s )", pubutil.MaskAK(accessKeyID), pubutil.MaskAK(accessKeyID))
+		CacheDb.Model(&cloud.Config{}).Where("access_key_id = ?", AccessKeyId).Update("InUse", true)
+		log.Infof("访问密钥已切换至 %s (Access Key have been switched to %s )", pubutil.MaskAK(AccessKeyId), pubutil.MaskAK(AccessKeyId))
 	} else {
 		log.Infof("未找到 %s 云服务商的访问密钥 (access keys for %s provider not found)", provider, provider)
 	}

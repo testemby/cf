@@ -32,7 +32,7 @@ var (
 	header               = []string{"序号 (SN)", "实例 ID (Instance ID)", "实例名称 (Instance Name)", "系统名称 (OS Name)", "系统类型 (OS Type)", "状态 (Status)", "私有 IP (Private IP)", "公网 IP (Public IP)", "区域 ID (Region ID)"}
 )
 
-func DescribeInstances(region string, running bool, SpecifiedInstanceID string, NextToken string) []Instances {
+func DescribeInstances(region string, running bool, SpecifiedInstanceId string, NextToken string) []Instances {
 	var response *ecs.DescribeInstancesResponse
 	request := ecs.CreateDescribeInstancesRequest()
 	request.PageSize = requests.NewInteger(100)
@@ -43,15 +43,15 @@ func DescribeInstances(region string, running bool, SpecifiedInstanceID string, 
 	if running == true {
 		request.Status = "Running"
 	}
-	if SpecifiedInstanceID != "all" {
-		request.InstanceIds = fmt.Sprintf("[\"%s\"]", SpecifiedInstanceID)
+	if SpecifiedInstanceId != "all" {
+		request.InstanceIds = fmt.Sprintf("[\"%s\"]", SpecifiedInstanceId)
 	}
 	log.Infof("正在 %s 区域中查找实例 (Looking for instances in the %s region)", region, region)
 	response, err := ECSClient(region).DescribeInstances(request)
 	errutil.HandleErr(err)
 	InstancesList := response.Instances.Instance
 	if len(InstancesList) != 0 {
-		log.Infof("在 %s 区域下找到 %d 个实例 (Found %d instances in %s region)", region, len(InstancesList), len(InstancesList), region)
+		log.Warnf("在 %s 区域下找到 %d 个实例 (Found %d instances in %s region)", region, len(InstancesList), len(InstancesList), region)
 		for _, i := range InstancesList {
 			// When the instance has multiple IPs, it is presented in a different format.
 			var PrivateIpAddressList []string
@@ -94,31 +94,31 @@ func DescribeInstances(region string, running bool, SpecifiedInstanceID string, 
 	NextToken = response.NextToken
 	if NextToken != "" {
 		log.Tracef("Next Token: %s", NextToken)
-		_ = DescribeInstances(region, running, SpecifiedInstanceID, NextToken)
+		_ = DescribeInstances(region, running, SpecifiedInstanceId, NextToken)
 	}
 	return DescribeInstancesOut
 }
 
-func ReturnInstancesList(region string, running bool, specifiedInstanceID string, ecsLsAllRegions bool) []Instances {
+func ReturnInstancesList(region string, running bool, specifiedInstanceId string, ecsLsAllRegions bool) []Instances {
 	var InstancesList []Instances
 	var Instance []Instances
 	if region == "all" {
 		for _, j := range GetECSRegions(ecsLsAllRegions) {
 			region := j.RegionId
-			Instance = DescribeInstances(region, running, specifiedInstanceID, "")
+			Instance = DescribeInstances(region, running, specifiedInstanceId, "")
 			DescribeInstancesOut = nil
 			for _, i := range Instance {
 				InstancesList = append(InstancesList, i)
 			}
 		}
 	} else {
-		InstancesList = DescribeInstances(region, running, specifiedInstanceID, "")
+		InstancesList = DescribeInstances(region, running, specifiedInstanceId, "")
 	}
 	return InstancesList
 }
 
-func PrintInstancesListRealTime(region string, running bool, specifiedInstanceID string, ecsLsAllRegions bool) {
-	InstancesList := ReturnInstancesList(region, running, specifiedInstanceID, ecsLsAllRegions)
+func PrintInstancesListRealTime(region string, running bool, specifiedInstanceId string, ecsLsAllRegions bool) {
+	InstancesList := ReturnInstancesList(region, running, specifiedInstanceId, ecsLsAllRegions)
 	var data = make([][]string, len(InstancesList))
 	for i, o := range InstancesList {
 		SN := strconv.Itoa(i + 1)
@@ -132,25 +132,25 @@ func PrintInstancesListRealTime(region string, running bool, specifiedInstanceID
 		cloud.PrintTable(td, Caption)
 		util.WriteTimestamp(TimestampType)
 	}
-	cmdutil.WriteCacheFile(td, "alibaba", "ecs", region, specifiedInstanceID)
+	cmdutil.WriteCacheFile(td, "alibaba", "ecs", region, specifiedInstanceId)
 }
 
-func PrintInstancesListHistory(region string, running bool, specifiedInstanceID string) {
-	cmdutil.PrintECSCacheFile(header, region, specifiedInstanceID, "alibaba", "ECS", running)
+func PrintInstancesListHistory(region string, running bool, specifiedInstanceId string) {
+	cmdutil.PrintECSCacheFile(header, region, specifiedInstanceId, "alibaba", "ECS", running)
 }
 
-func PrintInstancesList(region string, running bool, specifiedInstanceID string, ecsFlushCache bool, ecsLsAllRegions bool) {
+func PrintInstancesList(region string, running bool, specifiedInstanceId string, ecsFlushCache bool, ecsLsAllRegions bool) {
 	if ecsFlushCache {
-		PrintInstancesListRealTime(region, running, specifiedInstanceID, ecsLsAllRegions)
+		PrintInstancesListRealTime(region, running, specifiedInstanceId, ecsLsAllRegions)
 	} else {
 		oldTimestamp := util.ReadTimestamp(TimestampType)
 		if oldTimestamp == 0 {
-			PrintInstancesListRealTime(region, running, specifiedInstanceID, ecsLsAllRegions)
+			PrintInstancesListRealTime(region, running, specifiedInstanceId, ecsLsAllRegions)
 		} else if util.IsFlushCache(oldTimestamp) {
-			PrintInstancesListRealTime(region, running, specifiedInstanceID, ecsLsAllRegions)
+			PrintInstancesListRealTime(region, running, specifiedInstanceId, ecsLsAllRegions)
 		} else {
 			util.TimeDifference(oldTimestamp)
-			PrintInstancesListHistory(region, running, specifiedInstanceID)
+			PrintInstancesListHistory(region, running, specifiedInstanceId)
 		}
 	}
 }
