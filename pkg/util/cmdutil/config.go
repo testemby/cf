@@ -3,6 +3,7 @@ package cmdutil
 import (
 	"fmt"
 	"github.com/gookit/color"
+	"github.com/teamssix/cf/pkg/util/cmdutil/identify"
 	"github.com/teamssix/cf/pkg/util/database"
 	"github.com/teamssix/cf/pkg/util/errutil"
 	"github.com/teamssix/cf/pkg/util/global"
@@ -140,7 +141,7 @@ func inputAccessKey(config cloud.Config, provider string) {
 	var qs = []*survey.Question{
 		{
 			Name:   "Alias",
-			Prompt: &survey.Input{Message: "输入访问密钥别名 (Input Access Key Alias) (必须 Required)" + OldAlias + ":"},
+			Prompt: &survey.Input{Message: "输入访问密钥备注 (Input Access Key Alias) (必须 Required)" + OldAlias + ":"},
 		},
 		{
 			Name:   "AccessKeyId",
@@ -193,6 +194,20 @@ func inputAccessKey(config cloud.Config, provider string) {
 }
 
 func SaveAccessKey(config cloud.Config) {
+	var AccessKeyAvailable bool
+	switch config.Provider {
+	case "alibaba":
+		AccessKeyAvailable = identify.AlibabaIdentity(config.AccessKeyId, config.AccessKeySecret, config.STSToken)
+	case "tencent":
+		AccessKeyAvailable = identify.TencentIdentity(config.AccessKeyId, config.AccessKeySecret, config.STSToken)
+	case "huawei":
+		AccessKeyAvailable = identify.HuaweiIdentity(config.AccessKeyId, config.AccessKeySecret, config.STSToken)
+	case "aws":
+		AccessKeyAvailable = identify.AwsIdentity(config.AccessKeyId, config.AccessKeySecret, config.STSToken)
+	}
+	if !AccessKeyAvailable {
+		log.Warnln("检测到当前配置的访问凭证可能处于不可用的状态 (Detection indicates that the currently configured access credentials may be in an unavailable state.)")
+	}
 	configFilePath := pubutil.GetConfigFilePath()
 	database.InsertConfig(config)
 	database.UpdateConfigInUse(config)
