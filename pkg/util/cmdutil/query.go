@@ -1,61 +1,76 @@
 package cmdutil
 
 import (
-	"github.com/AlecAivazis/survey/v2"
 	log "github.com/sirupsen/logrus"
-	"fmt"
-	"strings"
-	"github.com/teamssix/cf/pkg/cloud"
+	"github.com/teamssix/cf/pkg/util/cmdutil/identify"
+	"github.com/teamssix/cf/pkg/util/pubutil"
 	"regexp"
+	"strings"
 )
 
+func IdentifyProvider(AccessKeyId, SecretAccessKeyId, SessionToken string) pubutil.Provider {
+	log.Debugf("\nAccessKeyId: %s\nSecretAccessKeyId: %s\nSessionToken: %s", AccessKeyId, SecretAccessKeyId, SessionToken)
+	var provider pubutil.Provider
+	switch {
+	case (regexp.MustCompile("^LTAI[0-9a-zA-Z]{20}$").MatchString(AccessKeyId) || strings.HasPrefix(AccessKeyId, "STS")):
+		// 正则已验证完全正确
+		if SecretAccessKeyId == "" || identify.AlibabaIdentity(AccessKeyId, SecretAccessKeyId, SessionToken) {
+			provider.CN = "阿里云"
+			provider.EN = "Alibaba Cloud"
+		}
+	case regexp.MustCompile("^AKID[0-9a-zA-Z]{32}$").MatchString(AccessKeyId):
+		// 正则已验证完全正确
+		if SecretAccessKeyId == "" || identify.TencentIdentity(AccessKeyId, SecretAccessKeyId, SessionToken) {
+			provider.CN = "腾讯云"
+			provider.EN = "Tencent Cloud"
+		}
+	case (regexp.MustCompile("^[A-Z0-9]*$").MatchString(AccessKeyId) && (len(AccessKeyId) == 20 || len(AccessKeyId) == 40)):
+		// 正则已验证完全正确
+		if SecretAccessKeyId == "" || identify.HuaweiIdentity(AccessKeyId, SecretAccessKeyId, SessionToken) {
+			provider.CN = "华为云"
+			provider.EN = "Huawei Cloud"
+		}
+	case regexp.MustCompile("(A3T[A-Z0-9]|AKIA|AGPA|AIDA|AROA|AIPA|ANPA|ANVA|ASIA)[A-Z0-9]{16}").MatchString(AccessKeyId):
+		// 正则源自 RExpository
+		if SecretAccessKeyId == "" || identify.AwsIdentity(AccessKeyId, SecretAccessKeyId, SessionToken) {
+			provider.CN = "亚马逊"
+			provider.EN = "AWS"
+		}
+	case regexp.MustCompile("^ALTAK[0-9a-zA-Z]{21}$").MatchString(AccessKeyId):
+		// 正则已验证完全正确
+		if SecretAccessKeyId == "" || identify.BaiduIdentity(AccessKeyId, SecretAccessKeyId, SessionToken) {
+			provider.CN = "百度云"
+			provider.EN = "Baidu Cloud"
+		}
+	case (strings.HasPrefix(AccessKeyId, "AKL") || strings.HasPrefix(AccessKeyId, "AKTP")):
+		if SecretAccessKeyId == "" || identify.HuoshanIdentity(AccessKeyId, SecretAccessKeyId) {
+			provider.CN = "火山引擎"
+			provider.EN = "Volcano Engine"
+		}
+	case (regexp.MustCompile(`^[a-zA-Z0-9-_]{40}$`).MatchString(AccessKeyId)):
+		if SecretAccessKeyId == "" || identify.QiniuIdentity(AccessKeyId, SecretAccessKeyId) {
+			provider.CN = "七牛云"
+			provider.EN = "Qiniu Cloud"
+		}
+	case strings.HasPrefix(AccessKeyId, "UCLOUD"):
+		provider.CN = "优刻得"
+		provider.EN = "UCloud"
+	case regexp.MustCompile("^AKLT[\\w-]{20}$").MatchString(AccessKeyId):
+		// 正则已验证完全正确
+		provider.CN = "金山云"
+		provider.EN = "Kingsoft Cloud"
+	case regexp.MustCompile("^JDC_[0-9A-Z]{28}$").MatchString(AccessKeyId):
+		// 正则已验证完全正确
+		provider.CN = "京东云"
+		provider.EN = "JD Cloud"
 
-func QueryAccessKey() {
-	log.Infoln("请输入Accesskey进行查询，输入exit将退出此功能")
-	var accesskey string
-	var result string
-	for {
-	    fmt.Println()
-	    prompt := &survey.Input{
-	        Message: "AccessKey:",
-	    }
-	    survey.AskOne(prompt, &accesskey)
-	    fmt.Println()
-
-	    accesskey = strings.TrimSpace(accesskey)
-	    if accesskey == "exit" {
-	        break
-	    }
-
-	    switch {
-		    case regexp.MustCompile("(A3T[A-Z0-9]|AKIA|AGPA|AIDA|AROA|AIPA|ANPA|ANVA|ASIA)[A-Z0-9]{16}").MatchString(accesskey): //正则源自RExpository
-		        result = "AWS"
-		    case regexp.MustCompile("AIza[0-9A-Za-z_\\-]{35}").MatchString(accesskey): //正则源自RExpository
-		        result = "谷歌云 (Google Cloud)"
-		    case (regexp.MustCompile("^LTAI[0-9a-zA-Z]{20}$").MatchString(accesskey) || strings.HasPrefix(accesskey, "STS")): //已验证完全正确
-		        result = "阿里云 (Aliyun)"
-		    case regexp.MustCompile("^AKID[0-9a-zA-Z]{32}$").MatchString(accesskey): //已验证完全正确
-		        result = "腾讯云 (Tencent Cloud)"
-		    case regexp.MustCompile("^ALTAK[0-9a-zA-Z]{21}$").MatchString(accesskey): //已验证完全正确
-		        result = "百度云 (Baidu Cloud)"
-		    case strings.HasPrefix(accesskey, "UCLOUD"):
-		        result = "UCloud"
-			case regexp.MustCompile("^AKLT[\\w-]{20}$").MatchString(accesskey): //已验证完成正确
-			    result = "金山云 (Kingsoft Cloud)"
-			case regexp.MustCompile("^JDC_[0-9A-Z]{28}$").MatchString(accesskey): //已验证完全正确
-			    result = "京东云 (Jingdong Cloud)"
-			case (strings.HasPrefix(accesskey, "AKL") || strings.HasPrefix(accesskey, "AKTP")):
-			    result = "火山引擎 (Volcano Engine)"
-			case (regexp.MustCompile("^[A-Z0-9]*$").MatchString(accesskey) && (len(accesskey) == 20 || len(accesskey) == 40)): //已验证完全正确
-        		result = "华为云 (Huawei Cloud)"
-		    default:
-		        result = "未知AK (Unkown)"
-	    }
-	    data := [][]string{
-	        {accesskey, result},
-	    }
-	    var header = []string{"AK (AccessKey)", "云厂商 (CloudProvider)"}
-	    var td = cloud.TableData{Header: header, Body: data}
-	    cloud.PrintTable(td, "")
+	case regexp.MustCompile("AIza[0-9A-Za-z_\\-]{35}").MatchString(AccessKeyId):
+		// 正则源自 RExpository
+		provider.CN = "谷歌云"
+		provider.EN = "GCP"
+	default:
+		provider.CN = ""
+		provider.EN = ""
 	}
+	return provider
 }

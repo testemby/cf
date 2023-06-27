@@ -111,6 +111,11 @@ type RDSWhiteListCache struct {
 	CreateTime   string
 }
 
+type Provider struct {
+	CN string
+	EN string
+}
+
 func GetUserDir() string {
 	home, _ := os.UserHomeDir()
 	return home
