@@ -29,16 +29,17 @@ type OSSCache struct {
 }
 
 type ECSCache struct {
-	AccessKeyId      string
-	InstanceId       string
-	InstanceName     string
-	OSName           string
-	OSType           string
-	PrivateIpAddress string
-	PublicIpAddress  string
-	RegionId         string
-	SN               string
-	Status           string
+	AccessKeyId          string
+	InstanceId           string
+	InstanceName         string
+	OSName               string
+	OSType               string
+	PrivateIpAddress     string
+	PublicIpAddress      string
+	RegionId             string
+	SN                   string
+	Status               string
+	CloudAssistantStatus string
 }
 
 type RDSCache struct {

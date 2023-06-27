@@ -139,7 +139,7 @@ func ECSExec(command string, commandFile string, scriptType string, specifiedIns
 		var num = 0
 		for _, i := range InstancesList {
 			specifiedInstanceId := i.InstanceId
-			if i.Status == "Running" {
+			if i.Status == "Running" && i.CloudAssistantStatus == "True" {
 				num = num + 1
 				InstanceName := i.InstanceName
 				region := i.RegionId
@@ -195,6 +195,10 @@ func ECSExec(command string, commandFile string, scriptType string, specifiedIns
 					commandResult := getExecResult(region, command, OSType, scriptType, specifiedInstanceId, timeOut)
 					fmt.Println(commandResult)
 				}
+			} else if i.CloudAssistantStatus == "False" {
+				log.Warnf(" %s 实例的云助手不可用 (The cloud assistant for the %s instance is not available.)", specifiedInstanceId, specifiedInstanceId)
+			} else if i.Status != "Running" {
+				log.Warnf("%s 实例未处于运行状态 (The %s instance is not in a running state.)", specifiedInstanceId, specifiedInstanceId)
 			}
 		}
 	}
@@ -358,55 +362,59 @@ func ReturnCacheInstanceList(specifiedInstanceId string, region string, provider
 		case specifiedInstanceId != "all" && region != "all":
 			if specifiedInstanceId == v.InstanceId && region == v.RegionId {
 				obj := Instances{
-					InstanceId:       v.InstanceId,
-					InstanceName:     v.InstanceName,
-					OSName:           v.OSName,
-					OSType:           v.OSType,
-					Status:           v.Status,
-					PrivateIpAddress: v.PrivateIpAddress,
-					PublicIpAddress:  v.PublicIpAddress,
-					RegionId:         v.RegionId,
+					InstanceId:           v.InstanceId,
+					InstanceName:         v.InstanceName,
+					OSName:               v.OSName,
+					OSType:               v.OSType,
+					Status:               v.Status,
+					PrivateIpAddress:     v.PrivateIpAddress,
+					PublicIpAddress:      v.PublicIpAddress,
+					RegionId:             v.RegionId,
+					CloudAssistantStatus: v.CloudAssistantStatus,
 				}
 				InstancesList = append(InstancesList, obj)
 			}
 		case specifiedInstanceId != "all" && region == "all":
 			if specifiedInstanceId == v.InstanceId {
 				obj := Instances{
-					InstanceId:       v.InstanceId,
-					InstanceName:     v.InstanceName,
-					OSName:           v.OSName,
-					OSType:           v.OSType,
-					Status:           v.Status,
-					PrivateIpAddress: v.PrivateIpAddress,
-					PublicIpAddress:  v.PublicIpAddress,
-					RegionId:         v.RegionId,
+					InstanceId:           v.InstanceId,
+					InstanceName:         v.InstanceName,
+					OSName:               v.OSName,
+					OSType:               v.OSType,
+					Status:               v.Status,
+					PrivateIpAddress:     v.PrivateIpAddress,
+					PublicIpAddress:      v.PublicIpAddress,
+					RegionId:             v.RegionId,
+					CloudAssistantStatus: v.CloudAssistantStatus,
 				}
 				InstancesList = append(InstancesList, obj)
 			}
 		case specifiedInstanceId == "all" && region != "all":
 			if region == v.RegionId {
 				obj := Instances{
-					InstanceId:       v.InstanceId,
-					InstanceName:     v.InstanceName,
-					OSName:           v.OSName,
-					OSType:           v.OSType,
-					Status:           v.Status,
-					PrivateIpAddress: v.PrivateIpAddress,
-					PublicIpAddress:  v.PublicIpAddress,
-					RegionId:         v.RegionId,
+					InstanceId:           v.InstanceId,
+					InstanceName:         v.InstanceName,
+					OSName:               v.OSName,
+					OSType:               v.OSType,
+					Status:               v.Status,
+					PrivateIpAddress:     v.PrivateIpAddress,
+					PublicIpAddress:      v.PublicIpAddress,
+					RegionId:             v.RegionId,
+					CloudAssistantStatus: v.CloudAssistantStatus,
 				}
 				InstancesList = append(InstancesList, obj)
 			}
 		case specifiedInstanceId == "all" && region == "all":
 			obj := Instances{
-				InstanceId:       v.InstanceId,
-				InstanceName:     v.InstanceName,
-				OSName:           v.OSName,
-				OSType:           v.OSType,
-				Status:           v.Status,
-				PrivateIpAddress: v.PrivateIpAddress,
-				PublicIpAddress:  v.PublicIpAddress,
-				RegionId:         v.RegionId,
+				InstanceId:           v.InstanceId,
+				InstanceName:         v.InstanceName,
+				OSName:               v.OSName,
+				OSType:               v.OSType,
+				Status:               v.Status,
+				PrivateIpAddress:     v.PrivateIpAddress,
+				PublicIpAddress:      v.PublicIpAddress,
+				RegionId:             v.RegionId,
+				CloudAssistantStatus: v.CloudAssistantStatus,
 			}
 			InstancesList = append(InstancesList, obj)
 		}

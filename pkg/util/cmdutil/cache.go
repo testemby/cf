@@ -56,16 +56,17 @@ func WriteCacheFile(td cloud.TableData, provider string, serviceType string, reg
 			var ECSCacheList []pubutil.ECSCache
 			for _, v := range td.Body {
 				ECSCache := pubutil.ECSCache{
-					AccessKeyId:      AccessKeyId,
-					SN:               v[0],
-					InstanceId:       v[1],
-					InstanceName:     v[2],
-					OSName:           v[3],
-					OSType:           v[4],
-					Status:           v[5],
-					PrivateIpAddress: v[6],
-					PublicIpAddress:  v[7],
-					RegionId:         v[8],
+					AccessKeyId:          AccessKeyId,
+					SN:                   v[0],
+					InstanceId:           v[1],
+					InstanceName:         v[2],
+					OSName:               v[3],
+					OSType:               v[4],
+					Status:               v[5],
+					PrivateIpAddress:     v[6],
+					PublicIpAddress:      v[7],
+					CloudAssistantStatus: v[8],
+					RegionId:             v[9],
 				}
 				ECSCacheList = append(ECSCacheList, ECSCache)
 			}
@@ -125,7 +126,7 @@ func PrintECSCacheFile(header []string, region string, specifiedInstanceId strin
 	var data [][]string
 	ECSCache := database.SelectEcsCacheFilter(provider, region, specifiedInstanceId, running)
 	for _, v := range ECSCache {
-		dataSingle := []string{v.SN, v.InstanceId, v.InstanceName, v.OSName, v.OSType, v.Status, v.PrivateIpAddress, v.PublicIpAddress, v.RegionId}
+		dataSingle := []string{v.SN, v.InstanceId, v.InstanceName, v.OSName, v.OSType, v.Status, v.PublicIpAddress, v.RegionId}
 		data = append(data, dataSingle)
 	}
 	PrintTable(data, header, resourceType)

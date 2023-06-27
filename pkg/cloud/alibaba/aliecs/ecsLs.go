@@ -5,32 +5,52 @@ import (
 	"fmt"
 	"strconv"
 
-	"github.com/teamssix/cf/pkg/util/errutil"
-
 	"github.com/aliyun/alibaba-cloud-sdk-go/sdk/requests"
 	"github.com/aliyun/alibaba-cloud-sdk-go/services/ecs"
 	log "github.com/sirupsen/logrus"
 	"github.com/teamssix/cf/pkg/cloud"
 	"github.com/teamssix/cf/pkg/util"
 	"github.com/teamssix/cf/pkg/util/cmdutil"
+	"github.com/teamssix/cf/pkg/util/errutil"
 )
 
 type Instances struct {
-	InstanceId       string
-	InstanceName     string
-	OSName           string
-	OSType           string
-	Status           string
-	PrivateIpAddress string
-	PublicIpAddress  string
-	RegionId         string
+	InstanceId           string
+	InstanceName         string
+	OSName               string
+	OSType               string
+	Status               string
+	PrivateIpAddress     string
+	PublicIpAddress      string
+	RegionId             string
+	CloudAssistantStatus string
 }
 
 var (
 	DescribeInstancesOut []Instances
 	TimestampType        = util.ReturnTimestampType("alibaba", "ecs")
-	header               = []string{"序号 (SN)", "实例 ID (Instance ID)", "实例名称 (Instance Name)", "系统名称 (OS Name)", "系统类型 (OS Type)", "状态 (Status)", "私有 IP (Private IP)", "公网 IP (Public IP)", "区域 ID (Region ID)"}
+	header               = []string{"序号 (SN)", "实例 ID (Instance ID)", "实例名称 (Instance Name)", "系统名称 (OS Name)", "系统类型 (OS Type)", "状态 (Status)", "公网 IP (Public IP)", "区域 ID (Region ID)"}
 )
+
+func CloudAssistantStatus(region, SpecifiedInstanceId, OSType string) string {
+	request := ecs.CreateDescribeCloudAssistantStatusRequest()
+	request.RegionId = region
+	request.OSType = OSType
+	request.InstanceId = &[]string{SpecifiedInstanceId}
+	response, err := ECSClient(region).DescribeCloudAssistantStatus(request)
+	errutil.HandleErr(err)
+	if len(response.InstanceCloudAssistantStatusSet.InstanceCloudAssistantStatus) > 0 {
+		cloudAssistantStatus := response.InstanceCloudAssistantStatusSet.InstanceCloudAssistantStatus[0]
+		log.Debugf("Instance Cloud Assistant Status: %s", cloudAssistantStatus.CloudAssistantStatus)
+		if cloudAssistantStatus.CloudAssistantStatus == "true" {
+			return "True"
+		} else {
+			return "False"
+		}
+	} else {
+		return "False"
+	}
+}
 
 func DescribeInstances(region string, running bool, SpecifiedInstanceId string, NextToken string) []Instances {
 	var response *ecs.DescribeInstancesResponse
@@ -78,15 +98,17 @@ func DescribeInstances(region string, running bool, SpecifiedInstanceId string, 
 			} else {
 				PublicIpAddress = string(b)
 			}
+			InstanceCloudAssistantStatus := CloudAssistantStatus(i.RegionId, i.InstanceId, i.OSType)
 			obj := Instances{
-				InstanceId:       i.InstanceId,
-				InstanceName:     i.InstanceName,
-				OSName:           i.OSName,
-				OSType:           i.OSType,
-				Status:           i.Status,
-				PrivateIpAddress: PrivateIpAddress,
-				PublicIpAddress:  PublicIpAddress,
-				RegionId:         i.RegionId,
+				InstanceId:           i.InstanceId,
+				InstanceName:         i.InstanceName,
+				OSName:               i.OSName,
+				OSType:               i.OSType,
+				Status:               i.Status,
+				PrivateIpAddress:     PrivateIpAddress,
+				PublicIpAddress:      PublicIpAddress,
+				RegionId:             i.RegionId,
+				CloudAssistantStatus: InstanceCloudAssistantStatus,
 			}
 			DescribeInstancesOut = append(DescribeInstancesOut, obj)
 		}
@@ -118,21 +140,33 @@ func ReturnInstancesList(region string, running bool, specifiedInstanceId string
 }
 
 func PrintInstancesListRealTime(region string, running bool, specifiedInstanceId string, ecsLsAllRegions bool) {
+	var InstanceCloudAssistantStatus string
 	InstancesList := ReturnInstancesList(region, running, specifiedInstanceId, ecsLsAllRegions)
-	var data = make([][]string, len(InstancesList))
+	var data1 = make([][]string, len(InstancesList))
 	for i, o := range InstancesList {
 		SN := strconv.Itoa(i + 1)
-		data[i] = []string{SN, o.InstanceId, o.InstanceName, o.OSName, o.OSType, o.Status, o.PrivateIpAddress, o.PublicIpAddress, o.RegionId}
+		data1[i] = []string{SN, o.InstanceId, o.InstanceName, o.OSName, o.OSType, o.Status, o.PublicIpAddress, o.RegionId}
 	}
-	var td = cloud.TableData{Header: header, Body: data}
-	if len(data) == 0 {
+	var td1 = cloud.TableData{Header: header, Body: data1}
+	if len(data1) == 0 {
 		log.Info("未发现 ECS 资源，可能是因为当前访问密钥权限不够 (No ECS instances found, Probably because the current Access Key do not have enough permissions)")
 	} else {
 		Caption := "ECS 资源 (ECS resources)"
-		cloud.PrintTable(td, Caption)
+		cloud.PrintTable(td1, Caption)
 		util.WriteTimestamp(TimestampType)
 	}
-	cmdutil.WriteCacheFile(td, "alibaba", "ecs", region, specifiedInstanceId)
+	var data2 = make([][]string, len(InstancesList))
+	for i, o := range InstancesList {
+		SN := strconv.Itoa(i + 1)
+		if o.CloudAssistantStatus == "True" {
+			InstanceCloudAssistantStatus = "True"
+		} else {
+			InstanceCloudAssistantStatus = "False"
+		}
+		data2[i] = []string{SN, o.InstanceId, o.InstanceName, o.OSName, o.OSType, o.Status, o.PrivateIpAddress, o.PublicIpAddress, InstanceCloudAssistantStatus, o.RegionId}
+	}
+	var td2 = cloud.TableData{Header: header, Body: data2}
+	cmdutil.WriteCacheFile(td2, "alibaba", "ecs", region, specifiedInstanceId)
 }
 
 func PrintInstancesListHistory(region string, running bool, specifiedInstanceId string) {

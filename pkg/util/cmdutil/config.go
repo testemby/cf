@@ -205,7 +205,9 @@ func SaveAccessKey(config cloud.Config) {
 	case "aws":
 		AccessKeyAvailable = identify.AwsIdentity(config.AccessKeyId, config.AccessKeySecret, config.STSToken)
 	}
-	if !AccessKeyAvailable {
+	if AccessKeyAvailable {
+		log.Infoln("当前配置的访问凭证处于可用状态 (The configured access key are in a valid state.)")
+	} else {
 		log.Warnln("检测到当前配置的访问凭证可能处于不可用的状态 (Detection indicates that the currently configured access credentials may be in an unavailable state.)")
 	}
 	configFilePath := pubutil.GetConfigFilePath()
