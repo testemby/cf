@@ -39,6 +39,7 @@ var errorMessages = map[string]string{
 	"Message: Current DB instance state does not support this operation.": "当前数据库状态不支持此操作，请稍后重试 (The current database state does not support this operation. Please try again later.)",
 	"Message: Specified SecurityIPList is not valid.":                     "指定的白名单无效，请检查后重试，注意是否有使用 CIDR 格式 (The specified whitelist is invalid. Please check and try again, ensuring that you are using the CIDR format if required.)",
 	"Message: Invalid security ip list specified, duplicated.":            "该白名单列表已存在 (The whitelist entry already exists.)",
+	"Status=403 Forbidden, Code=InvalidAccessKeyId":                       "无效的访问凭证 (Invalid Access Key.)",
 }
 
 var errorMessagesNoExit = map[string]string{
