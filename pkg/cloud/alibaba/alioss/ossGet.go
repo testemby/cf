@@ -9,6 +9,7 @@ import (
 	"os"
 	"path/filepath"
 	"sort"
+	"strings"
 
 	"github.com/schollz/progressbar/v3"
 
@@ -71,17 +72,25 @@ func DownloadAllObjects(bucketName string, outputPath string, ossLsRegion string
 		if isTrue {
 			log.Infof("正在下载 %s 存储桶内的所有对象…… (Downloading all objects in bucket %s...)", bucketName, bucketName)
 			bar := returnBar((int64(len(objects) - 2)))
+			var (
+				filePath    string
+				objectPath  string
+				objectPaths []string
+			)
 			for _, j := range objects {
-				if j.Key[len(j.Key)-1:] == "/" {
-					bar.Add(1)
-					pubutil.CreateFolder(returnBucketFileName(outputPath, bucketName, j.Key))
-				} else {
-					bar.Add(1)
-					fd, body, _, _ := OSSCollector.ReturnBucket(bucketName, j.Key, outputPath, region)
-					io.Copy(fd, body)
-					body.Close()
-					defer fd.Close()
+				filePath = returnBucketFileName(outputPath, bucketName, j.Key)
+				if strings.Contains(j.Key, "/") {
+					objectPath = filepath.Dir(filePath)
+					if !pubutil.IN(objectPath, objectPaths) {
+						pubutil.CreateFolder(objectPath)
+						objectPaths = append(objectPaths)
+					}
 				}
+				bar.Add(1)
+				fd, body, _, _ := OSSCollector.ReturnBucket(bucketName, j.Key, outputPath, region)
+				io.Copy(fd, body)
+				body.Close()
+				defer fd.Close()
 			}
 			log.Infof("对象已被保存到 %s 目录下 (The object has been saved to the %s directory)", outputPath, outputPath)
 		} else {
