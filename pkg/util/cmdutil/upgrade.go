@@ -44,9 +44,13 @@ func Upgrade(version string) {
 		downloadFile(downloadURL, fileName)
 		err := os.Rename(cfWorkDir+"/"+oldFileName, oldBakFileName)
 		errutil.HandleErr(err)
-		unzipFile(fileName)
+		NewFileName := unzipFile(fileName)
 		err = os.Remove(fileName)
 		errutil.HandleErr(err)
+		if strings.Split(oldFileName, ".")[0] != "cf" {
+			err = os.Rename(cfWorkDir+"/"+NewFileName, cfWorkDir+"/"+oldFileName)
+			errutil.HandleErr(err)
+		}
 		log.Infof("更新完成，历史版本已被重命名为 %s (The update is complete and the previous version has been renamed to %s)", oldFileName+".bak", oldFileName+".bak")
 	} else if err == nil {
 		log.Infof("当前 %s 版本为最新版本，无需升级 (The current %s version is the latest version, no need to upgrade)", version, version)
@@ -83,7 +87,7 @@ func downloadFile(downloadURL string, fileName string) {
 	log.Debugln("下载完成 (Download completed)")
 }
 
-func unzipFile(fileName string) {
+func unzipFile(fileName string) string {
 	log.Debugf("正在解压 %s 文件 (Unpacking %s file now)", fileName, fileName)
 	cacheFolder := ReturnCacheDict()
 	if runtime.GOOS == "windows" {
@@ -122,6 +126,7 @@ func unzipFile(fileName string) {
 		newCfPath := filepath.Join(cfWorkDir, "cf.exe")
 		log.Tracef("将 %s 文件移动到 %s (Move the %s file to %s)", oldCfPath, newCfPath, oldCfPath, newCfPath)
 		moveFile(oldCfPath, newCfPath)
+		return "cf.exe"
 	} else {
 		gzipStream, err := os.Open(fileName)
 		errutil.HandleErr(err)
@@ -157,6 +162,7 @@ func unzipFile(fileName string) {
 		defer f.Close()
 		err = f.Chmod(0755)
 		errutil.HandleErr(err)
+		return "cf"
 	}
 }
 
