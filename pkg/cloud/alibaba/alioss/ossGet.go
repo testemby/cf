@@ -49,13 +49,8 @@ func getObject(bucketName string, objectKey string, outputPath string, ossLsRegi
 }
 
 func DownloadAllObjects(bucketName string, outputPath string, ossLsRegion string, ossDownloadNumber string) {
-	var (
-		objectKey  string
-		region     string
-		objectList []string
-	)
+	var region string
 	OSSCollector := &OSSCollector{}
-	objectList = append(objectList, "all")
 	Buckets, _ := OSSCollector.ListBuckets(bucketName, ossLsRegion)
 	for _, v := range Buckets {
 		if v.Name == bucketName {
@@ -66,19 +61,16 @@ func DownloadAllObjects(bucketName string, outputPath string, ossLsRegion string
 	if len(objects) == 0 {
 		log.Warnf("在 %s 存储桶中没有发现对象 (No object found in %s bucket)", bucketName, bucketName)
 	} else {
-		for _, o := range objects {
-			objectList = append(objectList, o.Key)
+		var isTrue bool
+		prompt := &survey.Confirm{
+			Message: "即将下载存储桶内的所有文件，请确认是否下载？(Are you sure you want to download all files from the bucket?)",
+			Default: true,
 		}
-		objectList = append(objectList, "exit")
-		sort.Strings(objectList)
-		prompt := &survey.Select{
-			Message: "选择一个对象 (Choose a object): ",
-			Options: objectList,
-		}
-		survey.AskOne(prompt, &objectKey)
-		if objectKey == "all" {
+		err := survey.AskOne(prompt, &isTrue)
+		errutil.HandleErr(err)
+		if isTrue {
 			log.Infof("正在下载 %s 存储桶内的所有对象…… (Downloading all objects in bucket %s...)", bucketName, bucketName)
-			bar := returnBar((int64(len(objectList) - 2)))
+			bar := returnBar((int64(len(objects) - 2)))
 			for _, j := range objects {
 				if j.Key[len(j.Key)-1:] == "/" {
 					bar.Add(1)
@@ -92,14 +84,8 @@ func DownloadAllObjects(bucketName string, outputPath string, ossLsRegion string
 				}
 			}
 			log.Infof("对象已被保存到 %s 目录下 (The object has been saved to the %s directory)", outputPath, outputPath)
-		} else if objectKey == "exit" {
-			os.Exit(0)
 		} else {
-			if objectKey[len(objectKey)-1:] == "/" {
-				pubutil.CreateFolder(returnBucketFileName(outputPath, bucketName, objectKey))
-			} else {
-				getObject(bucketName, objectKey, outputPath, ossLsRegion)
-			}
+			log.Infoln("已取消下载 (Download canceled)")
 		}
 	}
 }
