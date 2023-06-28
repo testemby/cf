@@ -95,6 +95,8 @@ func DescribeInstances(region string, running bool, SpecifiedInstanceId string, 
 			b, _ := json.Marshal(PublicIpAddressList)
 			if len(PublicIpAddressList) == 1 {
 				PublicIpAddress = i.PublicIpAddress.IpAddress[0]
+			} else if len(PublicIpAddressList) == 0 {
+				PublicIpAddress = ""
 			} else {
 				PublicIpAddress = string(b)
 			}
