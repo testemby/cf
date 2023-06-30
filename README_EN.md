@@ -15,9 +15,12 @@
 
 CF is a cloud exploitation framework, It can facilitate the work of the red team after obtaining access key.
 
-CF releases: [github.com/teamssix/cf/releases](https://github.com/teamssix/cf/releases)
+<details> <summary>Comprehensive Guide to CF Commands</summary><br>
 
-![](https://cdn.jsdelivr.net/gh/teamssix/BlogImages/imgs/202304291924886.png)
+![](https://cdn.jsdelivr.net/gh/teamssix/BlogImages/imgs/202307010037966.png)
+
+</details>
+
 
 Current Supported Clouds:
 
@@ -35,6 +38,15 @@ For detailed manuals, please visit: [wiki.teamssix.com/cf](https://wiki.teamssix
 [![](https://cdn.jsdelivr.net/gh/teamssix/BlogImages/imgs/202210121147330.png)](https://wiki.teamssix.com/cf)
 
 ## Install
+
+### Install using Homebrew
+
+```bash
+brew tap teamssix/tap
+brew install teamssix/tap/cf
+```
+
+### Download source file
 
 Download the compressed files corresponding to the system in the CF download url: [github.com/teamssix/cf/releases](https://github.com/teamssix/cf/releases), decompressing it and run it in the command line.
 
@@ -57,9 +69,11 @@ Download the compressed files corresponding to the system in the CF download url
 
 |               Title                | Version |                                       Article URL                                       |  Author  | Release Time |
 | :--------------------------------: | :-----: | :-------------------------------------------------------------------------------------: | :------: | :----------: |
-|    《一次简单的"云"上野战记录》    | v0.4.2  | [https://mp.weixin.qq.com/s/wi8C...](https://mp.weixin.qq.com/s/wi8CoNwdpfJa6eMP4t1PCQ) | carrypan |  2022.10.19  |
-| 《记录一次平平无奇的云上攻防过程》 | v0.4.0  |            [https://zone.huoxian.cn/d/2557](https://zone.huoxian.cn/d/2557)             | TeamsSix |  2022.9.14   |
-|   《我用 CF 打穿了他的云上内网》   | v0.2.4  |         [https://zone.huoxian.cn/d/1341-cf](https://zone.huoxian.cn/d/1341-cf)          | TeamsSix |  2022.7.13   |
+|    《CF 云环境利用框架最佳实践》    |      v0.4.5      | [wiki.teamssix.com/cf/cases/cf_best_practices](https://wiki.teamssix.com/cf/cases/cf_best_practices.html) | TeamsSix | 2023.6.4 |
+|    《记一次打穿云上内网的攻防实战》    |      v0.4.5      | [zone.huoxian.cn/d/2766](https://zone.huoxian.cn/d/2766) | Walker 沃克 | 2023.5.21 |
+|    《一次简单的"云"上野战记录》    |      v0.4.2      | [mp.weixin.qq.com/s/wi8CoNwdpfJa6eMP4t1PCQ](https://mp.weixin.qq.com/s/wi8CoNwdpfJa6eMP4t1PCQ) | carrypan | 2022.10.19 |
+| 《记录一次平平无奇的云上攻防过程》 |      v0.4.0      | [zone.huoxian.cn/d/2557](https://zone.huoxian.cn/d/2557) | TeamsSix | 2022.9.14  |
+|   《我用 CF 打穿了他的云上内网》   |      v0.2.4      | [zone.huoxian.cn/d/1341-cf](https://zone.huoxian.cn/d/1341-cf) | TeamsSix | 2022.7.13  |
 
 ## Easy to start
 
@@ -130,6 +144,14 @@ cf alibaba oss obj get
 ```
 
 ![](https://cdn.jsdelivr.net/gh/teamssix/BlogImages/imgs/202209071737414.png)
+
+One-click creation of RDS account
+
+```bash
+cf alibaba rds account
+```
+
+![](https://cdn.jsdelivr.net/gh/teamssix/BlogImages/imgs/202307010033313.png)
 
 One-Click Upgrade CF Version
 

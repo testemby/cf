@@ -202,7 +202,7 @@ func PrintDBInstancesList(region string, running bool, specifiedDBInstanceId str
 				fmt.Println(v.SecurityIPList + "\n")
 			}
 
-			color.Tag("warn").Println("帐号信息 (Accounts information)")
+			color.Tag("warn").Println("账号信息 (Accounts information)")
 			RDSAccountInfo := GetAccountInfo(v.RegionId, v.DBInstanceId)
 			if len(RDSAccountInfo) > 0 {
 				for _, v := range RDSAccountInfo {
@@ -242,13 +242,13 @@ func PrintDBInstancesList(region string, running bool, specifiedDBInstanceId str
 					fmt.Println(v.DBStatus)
 					color.Tag("info").Print("描述 (Description): ")
 					fmt.Println(v.DBDescription)
-					color.Tag("info").Println("帐号 (Account): ")
+					color.Tag("info").Println("账号 (Account): ")
 					for _, v2 := range v.Accounts.AccountPrivilegeInfo {
-						color.Tag("info").Print("    帐号名 (Account Name): ")
+						color.Tag("info").Print("    账号名 (Account Name): ")
 						fmt.Println(v2.Account)
-						color.Tag("info").Print("    帐号权限 (Account Privilege): ")
+						color.Tag("info").Print("    账号权限 (Account Privilege): ")
 						fmt.Println(v2.AccountPrivilege)
-						color.Tag("info").Print("    帐号权限细节 (Account Privilege Detail): ")
+						color.Tag("info").Print("    账号权限细节 (Account Privilege Detail): ")
 						if v2.AccountPrivilegeDetail == "" {
 							fmt.Println("N/A")
 						} else {

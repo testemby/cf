@@ -133,7 +133,7 @@ func GetImageShare() {
 	if len(data) == 0 {
 		log.Infoln("未找到任何信息 (No information found.)")
 	} else {
-		header = []string{"序号 (SN)", "实例 ID (Instance ID)", "镜像 ID (Image Name)", "共享帐号 ID (Share Account ID)", "状态 (Status)", "区域 ID (Region ID)", "时间 (Time)"}
+		header = []string{"序号 (SN)", "实例 ID (Instance ID)", "镜像 ID (Image Name)", "共享账号 ID (Share Account ID)", "状态 (Status)", "区域 ID (Region ID)", "时间 (Time)"}
 		var td = cloud.TableData{Header: header, Body: data}
 		cloud.PrintTable(td, "")
 	}
@@ -183,7 +183,7 @@ func ImageDelete() {
 		}
 	}
 
-	log.Debugln(fmt.Sprintf("已选择实例 ID 为 %s，镜像 ID 为 %s，共享帐号为 %s，区域为 %s (Instance ID selected: %s, Image ID: %s, Shared account: %s, Region: %s.)", specifiedInstanceId, ImageId, aliyunAccount, region))
+	log.Debugln(fmt.Sprintf("已选择实例 ID 为 %s，镜像 ID 为 %s，共享账号为 %s，区域为 %s (Instance ID selected: %s, Image ID: %s, Shared account: %s, Region: %s.)", specifiedInstanceId, ImageId, aliyunAccount, region))
 
 	var isSure bool
 	prompt := &survey.Confirm{
