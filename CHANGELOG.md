@@ -1,3 +1,30 @@
+## [v0.5.0](https://github.com/teamssix/cf/releases/tag/v0.5.0) 2023.7.1
+
+### 新增功能
+
+* [#227](https://github.com/teamssix/cf/pull/227) 新增阿里云用户数据后门功能
+* [#228](https://github.com/teamssix/cf/pull/228) 新增阿里云镜像共享功能
+* [#231](https://github.com/teamssix/cf/pull/231) 新增阿里云接管控制台时自动创建 AK 功能
+* [#235](https://github.com/teamssix/cf/pull/235) 新增阿里云 RDS 列出详细信息功能
+* [#235](https://github.com/teamssix/cf/pull/235) 新增阿里云 RDS 添加账号功能
+* [#235](https://github.com/teamssix/cf/pull/235) 新增阿里云 RDS 创建公网访问地址的功能
+* [#235](https://github.com/teamssix/cf/pull/235) 新增阿里云 RDS 添加白名单的功能
+* [#238](https://github.com/teamssix/cf/pull/238) [#239](https://github.com/teamssix/cf/pull/239) 新增查询 AK 所属云厂商功能 
+* [#250](https://github.com/teamssix/cf/pull/250) 新增支持 brew 安装
+
+### 功能优化
+
+* [#243](https://github.com/teamssix/cf/pull/243) 优化配置功能，现在能自动识别配置是否处于可用状态
+* [#245](https://github.com/teamssix/cf/pull/245) 优化实例公网 IP 展示，不存在时会展示为空
+* [#246](https://github.com/teamssix/cf/pull/246) 优化 OSS 下载功能，现在默认会下载所有文件
+* [#248](https://github.com/teamssix/cf/pull/248) 优化更新处理逻辑
+* [#249](https://github.com/teamssix/cf/pull/249) 优化华为云 OBS 列出功能
+
+### Bug 修复
+
+* [#244](https://github.com/teamssix/cf/pull/244) 修复批量执行命令时，没有安装云助手导致批量执行中断的 Bug
+* [#247](https://github.com/teamssix/cf/pull/247) 修复 OSS 下载文件无法自动创建目录的 Bug
+
 ## [v0.4.5](https://github.com/teamssix/cf/releases/tag/v0.4.5) 2023.4.29
 
 ### 新增功能

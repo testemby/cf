@@ -137,7 +137,7 @@ func AddRdsAccount(DBInstanceId string, userName string) {
 				request.AccountPrivilege = "ReadWrite"
 			}
 
-			for _, v := range DBNames { // 为此帐号对实例下所有数据库授予最高权限
+			for _, v := range DBNames { // 为此账号对实例下所有数据库授予最高权限
 				request.DBName = v
 				RDSClient(region).GrantAccountPrivilege(request)
 			}
@@ -191,7 +191,7 @@ func DelRdsAccount() {
 	RDSAccountsCache = database.SelectRDSAccountCache("alibaba")
 
 	if len(RDSAccountsCache) == 0 {
-		log.Infoln("未创建过帐号，无需删除 (No create of the account, no need to delete)")
+		log.Infoln("未创建过账号，无需删除 (No create of the account, no need to delete)")
 		return
 	} else if len(RDSAccountsCache) == 1 {
 		DBInstanceId = RDSAccountsCache[0].DBInstanceId
@@ -209,7 +209,7 @@ func DelRdsAccount() {
 		}
 		sort.Strings(selectRdsIDList)
 		prompt := &survey.Select{
-			Message: "选择一个帐号 (Choose a RDS instance): ",
+			Message: "选择一个账号 (Choose a RDS instance): ",
 			Options: selectRdsIDList,
 		}
 		survey.AskOne(prompt, &selectRdsID)

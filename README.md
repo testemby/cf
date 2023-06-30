@@ -17,14 +17,12 @@
 
 CF 是一个云环境利用框架，适用于在红队场景中对云上内网进行横向、SRC 场景中对 Access Key 即访问凭证的影响程度进行判定、企业场景中对自己的云上资产进行自检等等。
 
-CF 下载地址：[github.com/teamssix/cf/releases](https://github.com/teamssix/cf/releases)
-
 <details> <summary>CF 命令使用大全</summary><br>
 
-![](https://cdn.jsdelivr.net/gh/teamssix/BlogImages/imgs/202304291915242.png)
-    
+![](https://cdn.jsdelivr.net/gh/teamssix/BlogImages/imgs/202307010038925.png)
+
 </details>
-    
+
 当前已支持的云：
 
 - [x] 阿里云
@@ -39,6 +37,15 @@ CF 下载地址：[github.com/teamssix/cf/releases](https://github.com/teamssix/
 [![](https://cdn.jsdelivr.net/gh/teamssix/BlogImages/imgs/202210121147330.png)](https://wiki.teamssix.com/cf)
 
 ## 安装
+
+### HomeBrew 安装
+
+```bash
+brew tap teamssix/tap
+brew install teamssix/tap/cf
+```
+
+### 下载二进制包
 
 直接在 CF 下载地址：[github.com/teamssix/cf/releases](https://github.com/teamssix/cf/releases) 中下载系统对应的压缩文件，解压后在命令行中运行即可。
 
@@ -136,6 +143,14 @@ cf alibaba oss obj get
 ```
 
 ![](https://cdn.jsdelivr.net/gh/teamssix/BlogImages/imgs/202209071737414.png)
+
+一键创建 RDS 账号
+
+```bash
+cf alibaba rds account
+```
+
+![](https://cdn.jsdelivr.net/gh/teamssix/BlogImages/imgs/202307010033313.png)
 
 一键升级 CF 版本
 

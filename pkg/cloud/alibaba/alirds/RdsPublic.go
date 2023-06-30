@@ -175,7 +175,7 @@ func RdsPublicCancel() {
 		}
 		sort.Strings(selectRdsIDList)
 		prompt := &survey.Select{
-			Message: "选择一个帐号 (Choose a RDS instance): ",
+			Message: "选择一个账号 (Choose a RDS instance): ",
 			Options: selectRdsIDList,
 		}
 		survey.AskOne(prompt, &selectRdsID)

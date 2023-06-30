@@ -79,8 +79,8 @@ var rdsLsCmd = &cobra.Command{
 // RDS Account 相关操作
 var rdsAccountCmd = &cobra.Command{
 	Use:   "account",
-	Short: "添加云数据库帐号 (Add RDS account)",
-	Long:  "添加云数据库帐号 (Add RDS account)",
+	Short: "添加云数据库账号 (Add RDS account)",
+	Long:  "添加云数据库账号 (Add RDS account)",
 	Run: func(cmd *cobra.Command, args []string) {
 		alirds.AddRdsAccount(rdsAccountSpecifiedDBInstanceId, rdsAccountUserName)
 	},
@@ -88,8 +88,8 @@ var rdsAccountCmd = &cobra.Command{
 
 var rdsAccountLsCmd = &cobra.Command{
 	Use:   "ls",
-	Short: "列出添加过的云数据库帐号 (Listing the added RDS accounts)",
-	Long:  "列出添加过的云数据库帐号 (Listing the added RDS accounts)",
+	Short: "列出添加过的云数据库账号 (Listing the added RDS accounts)",
+	Long:  "列出添加过的云数据库账号 (Listing the added RDS accounts)",
 	Run: func(cmd *cobra.Command, args []string) {
 		alirds.LsRdsAccount()
 	},
@@ -97,8 +97,8 @@ var rdsAccountLsCmd = &cobra.Command{
 
 var rdsAccountDelCmd = &cobra.Command{
 	Use:   "del",
-	Short: "删除所添加的云数据库帐号 (Deleting the added RDS account)",
-	Long:  "删除所添加的云数据库帐号 (Deleting the added RDS account)",
+	Short: "删除所添加的云数据库账号 (Deleting the added RDS account)",
+	Long:  "删除所添加的云数据库账号 (Deleting the added RDS account)",
 	Run: func(cmd *cobra.Command, args []string) {
 		alirds.DelRdsAccount()
 	},
