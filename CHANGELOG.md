@@ -10,7 +10,7 @@
 * [#235](https://github.com/teamssix/cf/pull/235) 新增阿里云 RDS 创建公网访问地址的功能
 * [#235](https://github.com/teamssix/cf/pull/235) 新增阿里云 RDS 添加白名单的功能
 * [#238](https://github.com/teamssix/cf/pull/238) [#239](https://github.com/teamssix/cf/pull/239) 新增查询 AK 所属云厂商功能 
-* [#250](https://github.com/teamssix/cf/pull/250) 新增支持 brew 安装
+* [#251](https://github.com/teamssix/cf/pull/251) 新增支持 brew 安装
 
 ### 功能优化
 
