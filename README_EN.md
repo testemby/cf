@@ -75,6 +75,12 @@ Download the compressed files corresponding to the system in the CF download url
 | 《记录一次平平无奇的云上攻防过程》 |      v0.4.0      | [zone.huoxian.cn/d/2557](https://zone.huoxian.cn/d/2557) | TeamsSix | 2022.9.14  |
 |   《我用 CF 打穿了他的云上内网》   |      v0.2.4      | [zone.huoxian.cn/d/1341-cf](https://zone.huoxian.cn/d/1341-cf) | TeamsSix | 2022.7.13  |
 
+## CF Q&A
+
+I have created a Q&A thread in the [Discussions](https://github.com/teamssix/cf/discussions) section of the CF project on GitHub. If you have any questions or issues related to CF, feel free to ask there, and I will provide the corresponding answers. Additionally, you can find a compilation of previously asked questions in that thread.
+
+CF Q&A thread: [github.com/teamssix/cf/discussions/250](https://github.com/teamssix/cf/discussions/250)
+
 ## Easy to start
 
 ![](https://cdn.jsdelivr.net/gh/teamssix/BlogImages/imgs/202210121148379.png)
