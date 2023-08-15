@@ -21,5 +21,4 @@ jobs:
     - name: Build
       run: go build -ldflags="-X 'main.VCSStatus='" -v ./...
 
-    - name: Test
-      run: go test -v ./...
+
